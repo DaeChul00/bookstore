@@ -51,6 +51,7 @@ public class BookController {
 	}
 	@RequestMapping("list")
 	public ModelAndView list(HttpServletRequest request) {
+		System.out.println(">>> 컨트롤러 접속 성공! <<<");
 		ModelAndView mv =new ModelAndView();
 		mv.addObject("list", service.getBooks());
 		String[] paths=request.getRequestURI().split("/");
