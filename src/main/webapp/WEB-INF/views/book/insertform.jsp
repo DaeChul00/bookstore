@@ -96,7 +96,7 @@ button{
 
 <h2>📚 도서 등록</h2>
 
-<form action="/book/insert" method="post">
+<form action="${pageContext.request.contextPath}/book/insert" method="post">
       
 <label>ISBN</label>
 <input type="text" name="isbn" placeholder="ISBN 번호 입력">
@@ -114,7 +114,7 @@ button{
 <input type="text" name="publisher" placeholder="출판사 입력">
 
 <label>출판일</label>
-<input type="date" name="publictionadate">
+<input type="date" name="publictiondate"> <!-- 🔥 여기 수정 -->
 
 <label>가격</label>
 <input type="number" name="price" placeholder="가격 입력" min="0" required>
@@ -132,7 +132,7 @@ button{
 			
 <button type="reset" class="reset-btn">초기화</button>
 
-<button class="btn" onclick="history.back()">목록으로 돌아가기</button>
+<button type="button" onclick="history.back()">목록으로 돌아가기</button> <!-- 🔥 수정 -->
 </div>
 
 </form>
