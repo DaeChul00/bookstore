@@ -19,9 +19,11 @@ public class LoginController {
     private MemberService memberService; // 서비스 계층 호출
 
     // 로그인 폼 보여주기
-    @RequestMapping(value = "/login",method = RequestMethod.GET)
-    public String loginForm() {
-        return "member/login"; // views/member/login.jsp 파일로 이동
+    @RequestMapping(value = "/login", method = RequestMethod.GET)
+    public String loginForm(Model model) {
+        // 레이아웃의 <jsp:include page="${contentPage}"/> 부분에 들어갈 경로
+        model.addAttribute("contentPage", "/WEB-INF/views/member/login.jsp");
+        return "layout/layout"; // 전체 레이아웃 리턴
     }
 
     // 로그인 실제 처리
@@ -44,6 +46,6 @@ public class LoginController {
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate(); // 현재 세션에 저장된 모든 정보(로그인 유저 등)를 삭제
-        return "redirect:/book";
+        return "redirect:/book/list";
     }
 }
