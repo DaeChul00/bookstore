@@ -9,5 +9,6 @@ public interface BookDAO {
 	public List<BookVO> findAll();
 	public BookVO findById(int id);
 	public int update(BookVO book);
-	
+	public int delete(int id);
+	public List<BookVO> findAll(String category, String keyword);
 }

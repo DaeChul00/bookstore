@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import book.model.BookVO;
 import book.repository.BookDAO;
-import book.repository.BookDAOH2;
 
 @Service
 public class BookService {
@@ -28,6 +27,13 @@ public class BookService {
 	public boolean updateBook(BookVO book) {
 		int result = dao.update(book);
 		return result > 0;
+	}
+	public boolean delete(int id) {
+	    int result = dao.delete(id);
+	    return result > 0;
+	}
+	public List<BookVO> getBooks(String category, String keyword) {
+	    return dao.findAll(category, keyword);
 	}
 
 }
