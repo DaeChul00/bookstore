@@ -9,7 +9,9 @@ public interface MemberDAO {
 	
 	MemberVO login(String memberId, String password);
 	void signup(MemberVO vo);
-	public List<MemberVO> findAll();
+	void updateMember(MemberVO vo);
+	void deleteMember(String memberId);
+	List<MemberVO> findAll(String sort);
 	void updateRole(String memberId, String role);
 	MemberVO findById(String memberId);
 }

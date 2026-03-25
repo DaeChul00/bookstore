@@ -9,11 +9,21 @@
     .role-user { color: #333; }
 </style>
 
+
+
 <div class="admin-container">
     <h2>👤 전체 회원 관리</h2>
     <hr>
+    <select style="padding: 5px; border-radius: 4px;" 
+	        onchange="location.href='${pageContext.request.contextPath}/admin/memberList?sort=' + this.value">
+	    <option value="new" ${currentSort == 'new' ? 'selected' : ''}>최신 가입순</option>
+	    <option value="old" ${currentSort == 'old' ? 'selected' : ''}>오래된 가입순</option>
+	    <option value="name" ${currentSort == 'name' ? 'selected' : ''}>이름순</option>
+	    <option value="id" ${currentSort == 'id' ? 'selected' : ''}>아이디순</option>
+	</select>
+    
     <table class="admin-table">
-        <thead>
+        <thead style="text-align: center;">
             <tr>
                 <th>아이디</th>
                 <th>이름</th>
@@ -23,7 +33,7 @@
                 <th>관리</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody style="text-align: center;">
 		    <c:forEach var="user" items="${userList}">
 		        <tr>
 		            <%-- user.id를 user.memberId로 변경 --%>
@@ -37,12 +47,17 @@
 					</td>
 					<td>${user.regdate}</td>
 					<td>
-					    <%-- 권한 변경 버튼 --%>
-					    <button type="button" 
+					    <button type="button" class="btn-role"
 					            onclick="if(confirm('${user.role} 권한을 변경하시겠습니까?')) 
-					            location.href='${pageContext.request.contextPath}/admin/changeRole?memberId=${user.memberId}&role=${user.role}'"
-					            style="padding:5px 10px; cursor:pointer; background-color:#f39c12; color:white; border:none; border-radius:3px;">
+					            location.href='${pageContext.request.contextPath}/admin/changeRole?memberId=${user.memberId}&role=${user.role}'">
 					        권한변경
+					    </button>
+					
+					    <button type="button" class="btn-delete" 
+					            style="background-color: #d9534f; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-left: 5px;"
+					            onclick="if(confirm('${user.memberId} 회원을 강제 탈퇴시키겠습니까?')) 
+					            location.href='${pageContext.request.contextPath}/admin/deleteMember?memberId=${user.memberId}'">
+					        삭제
 					    </button>
 					</td>
 		        </tr>
@@ -50,3 +65,4 @@
 		</tbody>
     </table>
 </div>
+

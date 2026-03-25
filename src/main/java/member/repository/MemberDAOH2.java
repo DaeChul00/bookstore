@@ -43,9 +43,37 @@ public class MemberDAOH2 implements MemberDAO {
     }
     
     @Override
-    public List<MemberVO> findAll() {
+    public void updateMember(MemberVO vo) {
+        String sql = "UPDATE MEMBER SET NAME = ?, EMAIL = ? WHERE MEMBER_ID = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, vo.getName());
+            ps.setString(2, vo.getEmail());
+            ps.setString(3, vo.getMemberId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @Override
+    public void deleteMember(String memberId) {
+        String sql = "DELETE FROM MEMBER WHERE MEMBER_ID = ?";
+        jdbcTemplate.update(sql, memberId);
+    }
+    
+    @Override
+    public List<MemberVO> findAll(String sort) {
         List<MemberVO> list = new ArrayList<>();
-        String sql = "SELECT * FROM MEMBER ORDER BY REGDATE DESC"; // 최근 가입순
+        
+        String orderBy = "REGDATE DESC"; // 기본값
+        
+        if ("name".equals(sort)) orderBy = "NAME ASC";
+        else if ("old".equals(sort)) orderBy = "REGDATE ASC";
+        else if ("id".equals(sort)) orderBy = "MEMBER_ID ASC";
+
+        // ORDER BY 뒤에 공백이 있는지 꼭 확인하세요!
+        String sql = "SELECT * FROM MEMBER ORDER BY " + orderBy;
+        
         try (PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {

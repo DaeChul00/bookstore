@@ -28,3 +28,16 @@ main { flex: 1; padding: 60px 0; background-color: #fdfdfd; }
     font-weight: 500;
     cursor: pointer;
 }
+    
+/* 테이블 헤더(th)를 무조건 가운데 정렬 */
+th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* 데이터 부분(td)도 가운데 정렬하고 싶다면 아래 주석을 해제하세요 */
+/* td {
+    text-align: center;
+    vertical-align: middle;
+} 
+*/

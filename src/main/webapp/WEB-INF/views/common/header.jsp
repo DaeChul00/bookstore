@@ -11,6 +11,7 @@
                 </c:when>
                 <c:otherwise>
                     <span><strong>${loginUser.name}</strong>님</span>
+					<a href="${pageContext.request.contextPath}/member/update" style="text-decoration:none; color:#666; font-size:12px; margin-left:10px;">[정보수정]</a>
                     <c:if test="${loginUser.role == 'ADMIN'}">
 					    <a href="${pageContext.request.contextPath}/admin/book/list" 
 					       style="color:var(--kb-green); font-weight:bold; text-decoration:none;">도서관리</a>

@@ -32,15 +32,25 @@ public class MemberServiceImpl implements MemberService {
         // 2. 존재하지 않을 때만 가입 진행
         memberDAO.signup(vo);
     }
-
-	@Override
-	public List<MemberVO> getAllMembers() {
-		// memberDAO의 findAll()을 호출하여 실제 데이터를 반환하도록 수정
-	    return memberDAO.findAll();
+    
+    @Override
+	public void updateMember(MemberVO vo) {
+		memberDAO.updateMember(vo);
 	}
+    
+    @Override
+    public void withdraw(String memberId) {
+        memberDAO.deleteMember(memberId);
+    }
+
+    @Override
+    public List<MemberVO> getAllMembers(String sort) {
+        return memberDAO.findAll(sort);
+    }
 	
 	@Override
 	public void changeRole(String memberId, String role) {
 	    memberDAO.updateRole(memberId, role);
 	}
+
 }

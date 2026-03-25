@@ -10,8 +10,8 @@
 
     <table class="table table-hover" style="vertical-align: middle;">
         <thead class="table-dark">
-            <tr>
-                <th>ID</th>
+            <tr style="text-align: center;">
+                <th>ISBN</th>
                 <th>이미지</th>
                 <th>도서명</th>
                 <th>저자</th>
@@ -21,10 +21,10 @@
                 <th>관리</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody style="text-align: center;">
             <c:forEach var="book" items="${bookList}">
                 <tr>
-                    <td>${book.id}</td>
+                    <td>${book.isbn}</td>
                     <td><img src="${book.bookimage}" style="width: 50px; height: 70px; object-fit: cover;"></td>
                     <td><strong>${book.title}</strong></td>
                     <td>${book.author}</td>
