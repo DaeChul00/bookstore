@@ -22,48 +22,58 @@
     <h2>도서 정보 수정</h2>
     <hr>
     <form action="${pageContext.request.contextPath}/book/update" method="post">
-        <input type="hidden" name="id" value="${book.id}">
-        <div class="form-group">
-            <label>ISBN</label>
-            <input type="text" name="isbn" value="${book.isbn}">
-        </div>
-        <div class="form-group">
-            <label>도서 제목</label>
-            <input type="text" name="title" value="${book.title}" required>
-        </div>
-        <div class="form-group">
-            <label>저자</label>
-            <input type="text" name="author" value="${book.author}">
-        </div>
-        <div class="form-group">
-            <label>출판사</label>
-            <input type="text" name="publisher" value="${book.publisher}">
-        </div>
-        <div class="form-group">
-            <label>출판일</label>
-            <input type="text" name="publictiondate" value="${book.publictiondate}">
-        </div>
-        <div class="form-group">
-            <label>가격</label>
-            <input type="number" name="price" value="${book.price}">
-        </div>
-        <div class="form-group">
-            <label>평점</label>
-            <input type="number" step="0.1" name="rating" value="${book.rating}">
-        </div>
-        <div class="form-group">
-            <label>이미지 경로</label>
-            <input type="text" name="bookimage" value="${book.bookimage}">
-        </div>
-        <div class="form-group">
-            <label>도서 설명</label>
-            <textarea name="content" style="height:100px;">${book.content}</textarea>
-        </div>
-        <div class="btn-area">
-            <button type="submit" class="btn btn-submit">수정 완료</button>
-            <a href="${pageContext.request.contextPath}/book/view?id=${book.id}" class="btn btn-cancel">취소</a>
-        </div>
-    </form>
+    <input type="hidden" name="id" value="${bk.id}">
+
+    <div class="form-group">
+        <label>ISBN</label>
+        <input type="text" name="isbn" value="${bk.isbn}">
+    </div>
+
+    <div class="form-group">
+        <label>도서 제목</label>
+        <input type="text" name="title" value="${bk.title}" required>
+    </div>
+
+    <div class="form-group">
+        <label>저자</label>
+        <input type="text" name="author" value="${bk.author}">
+    </div>
+
+    <div class="form-group">
+        <label>출판사</label>
+        <input type="text" name="publisher" value="${bk.publisher}">
+    </div>
+
+    <div class="form-group">
+        <label>출판일</label>
+        <input type="text" name="publictiondate" value="${bk.publictiondate}">
+    </div>
+
+    <div class="form-group">
+        <label>가격</label>
+        <input type="number" name="price" value="${bk.price}">
+    </div>
+
+    <div class="form-group">
+        <label>평점</label>
+        <input type="number" step="0.1" name="rating" value="${bk.rating}">
+    </div>
+
+    <div class="form-group">
+        <label>이미지 경로</label>
+        <input type="text" name="bookimage" value="${bk.bookimage}">
+    </div>
+
+    <div class="form-group">
+        <label>도서 설명</label>
+        <textarea name="content" style="height:100px;">${bk.content}</textarea>
+    </div>
+
+    <div class="btn-area">
+        <button type="submit" class="btn btn-submit">수정 완료</button>
+        <a href="${pageContext.request.contextPath}/book/view?id=${bk.id}" class="btn btn-cancel">취소</a>
+    </div>
+</form>
 </div>
 </body>
 </html>

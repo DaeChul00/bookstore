@@ -74,9 +74,8 @@ public class BookController {
 		mv.setViewName("layout/layout");
 		return mv;
 	}
-	//수정폼    /phonebook/updateform
 	@RequestMapping("updateform")
-	public ModelAndView uploadform(int id,HttpServletRequest request) {
+	public ModelAndView updateform(int id,HttpServletRequest request) {
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("bk", service.getBook(id));
 		

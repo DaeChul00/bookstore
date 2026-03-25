@@ -1,5 +1,7 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,100 +9,69 @@
 <title>도서 상세보기</title>
 
 <style>
-body{
-    font-family: Arial;
-    background-color:#f5f5f5;
-}
-
-.container{
-    width:800px;
-    margin:50px auto;
-    background:white;
-    padding:30px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-
-.book-img{
-    width:200px;
-}
-
-table{
-    width:100%;
-    border-collapse: collapse;
-}
-
-td{
-    padding:10px;
-    border-bottom:1px solid #ddd;
-}
-
-.title{
-    font-size:24px;
-    font-weight:bold;
-}
-
-.btn{
-    margin-top:30px;
-    padding:10px 20px;
-    background:#333;
-    color:white;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-.btn:hover{
-    background:#555;
-}
+    body { font-family: 'Malgun Gothic', sans-serif; color: #333; }
+    .container { width: 900px; margin: 0 auto; }
+    .detail-box { display: flex; margin-top: 30px; }
+    .book-img { width: 250px; height: 350px; object-fit: cover; }
+    .book-info { margin-left: 40px; }
+    .title { font-size: 24px; font-weight: bold; }
+    .meta { margin: 10px 0; color: #666; }
+    .price { font-size: 20px; font-weight: bold; margin: 10px 0; }
+    .content { margin-top: 20px; line-height: 1.6; }
+    .btn-area { margin-top: 30px; }
+    .btn {
+        padding: 10px 15px;
+        background-color: green;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-right: 10px;
+    }
 </style>
-
 </head>
+
 <body>
 
 <div class="container">
 
-<table>
+    <h2>도서 상세보기</h2>
+    <hr>
 
-<tr>
-<td rowspan="6" style="width:220px;">
-<img class="book-img" src="${book.bookimage}">
-</td>
-<td class="title">${book.title}</td>
-</tr>
+    <div class="detail-box">
+        <img src="${bk.bookimage}" class="book-img" alt="${bk.title}">
 
-<tr>
-<td>저자 : ${book.author}</td>
-</tr>
+        <div class="book-info">
+            <div class="title">${bk.title}</div>
 
-<tr>
-<td>출판사 : ${book.publisher}</td>
-</tr>
+            <div class="meta">
+                ${bk.author} · ${bk.publisher} · ${bk.publictiondate}
+            </div>
 
-<tr>
-<td>출판일 : ${book.publictiondate}</td>
-</tr>
+            <div class="price">
+                <fmt:formatNumber value="${bk.price}" type="number"/>원
+            </div>
 
-<tr>
-<td>가격 : ${book.price} 원</td>
-</tr>
+            <div>
+                평점 ★ ${bk.rating}
+            </div>
 
-<tr>
-<td>평점 : ${book.rating}</td>
-</tr>
+            <div class="content">
+                ${bk.content}
+            </div>
 
-<tr>
-<td colspan="2">
-<h3>책 소개</h3>
-<p>${book.content}</p>
-</td>
-</tr>
+            <div class="btn-area">
+                <button class="btn"
+                    onclick="location.href='${pageContext.request.contextPath}/book/updateform?id=${bk.id}'">
+                    수정
+                </button>
 
-</table>
-
-<!-- 뒤로가기 버튼 -->
-<button class="btn" onclick="location.href='${pageContext.request.contextPath}/book/updateform'">수정</button>
-<button class="btn" onclick="history.back()">목록으로 돌아가기</button>
+                <button class="btn"
+                    onclick="location.href='${pageContext.request.contextPath}/book/list'">
+                    목록
+                </button>
+            </div>
+        </div>
+    </div>
 
 </div>
 

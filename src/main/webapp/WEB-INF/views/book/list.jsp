@@ -2,6 +2,26 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
+<c:if test="${not empty message}">
+<script>
+    let kind = "${kind}";
+    let message = "${message}";
+
+    if(message === "success"){
+        if(kind === "insert"){
+            alert("도서 등록 성공!");
+        }else if(kind === "update"){
+            alert("도서 수정 성공!");
+        }
+    }else{
+        if(kind === "insert"){
+            alert("도서 등록 실패!");
+        }else if(kind === "update"){
+            alert("도서 수정 실패!");
+        }
+    }
+</script>
+</c:if>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -44,7 +64,7 @@
 <div class="container">
 	<div class="headline">
     <h2>도서 리스트</h2>
-    <%-- 도서 등록 버튼<button class="insertbtn" onclick="location.href='${pageContext.request.contextPath}/book/insertform'">도서 등록</button> --%>
+    <button class="insertbtn" onclick="location.href='${pageContext.request.contextPath}/book/insertform'">도서 등록</button>
 	</div>
 	<hr>
     
