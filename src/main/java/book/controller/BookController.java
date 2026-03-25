@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -30,7 +31,7 @@ public class BookController {
 	public String defaultPage() {
 	    return "redirect:/book/list";
 	}
-	@RequestMapping("insertform")
+	@RequestMapping(value = "insert",method = RequestMethod.GET)
 	public String insertform(Model model, HttpSession session) { // HttpSession 추가
 	    // 세션에서 로그인 정보 가져오기 (MemberVO 클래스명은 본인의 프로젝트에 맞게 수정)
 	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
@@ -47,7 +48,7 @@ public class BookController {
 	    return "layout/layout";
 	}
 	
-	@RequestMapping("insert")
+	@RequestMapping(value = "insert",method = RequestMethod.POST)
 	public  String insert(@ModelAttribute BookVO ibk, RedirectAttributes ra) {
 		
 		BookVO bk = new BookVO();
@@ -89,7 +90,7 @@ public class BookController {
 		mv.setViewName("layout/layout");
 		return mv;
 	}
-	@RequestMapping("updateform")
+	@RequestMapping(value = "update",method = RequestMethod.GET)
 	public ModelAndView updateform(int id, HttpServletRequest request, HttpSession session) {
 		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
@@ -100,16 +101,16 @@ public class BookController {
 	    ModelAndView mv = new ModelAndView();
 	    mv.addObject("bk", service.getBook(id));
 		
-		String[] paths=request.getRequestURI().split("/");
-		String contentPage=String.format("/WEB-INF/views/%s/%s.jsp", paths[1],paths[2]);
+	    String folder ="book";
+	    String page="updateform";
+	    String contentPage=String.format("/WEB-INF/views/%s/%s.jsp",folder,page);
 		
 		mv.addObject("contentPage",contentPage);
-		
 		
 		mv.setViewName("layout/layout");
 		return mv;
 	}
-	@RequestMapping("update")
+	@RequestMapping(value = "update",method = RequestMethod.POST)
 	public String update(BookVO bk, RedirectAttributes ra) {
 		ra.addFlashAttribute("kind","update");
 		System.out.println(bk);

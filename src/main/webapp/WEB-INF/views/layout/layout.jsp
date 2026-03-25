@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -7,6 +8,7 @@
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
+
 </head>
 
 <body>
@@ -29,6 +31,10 @@
     </footer>
 
 </div>
-
+<c:if test="${param.error == 'auth'}">
+    <script>
+        alert("관리자만 접근 가능한 페이지입니다.");
+    </script>
+</c:if>
 </body>
 </html>

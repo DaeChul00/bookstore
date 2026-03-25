@@ -36,7 +36,7 @@
 			        <%-- 1. 관리자인 경우: 수정, 삭제, 목록 버튼 --%>
 			        <c:when test="${loginUser.role == 'ADMIN'}">
 			            <button class="btn btn-admin" 
-			                onclick="location.href='${pageContext.request.contextPath}/book/updateform?id=${bk.id}'">
+			                onclick="location.href='${pageContext.request.contextPath}/book/update?id=${bk.id}'">
 			                도서 수정
 			            </button>
 			            

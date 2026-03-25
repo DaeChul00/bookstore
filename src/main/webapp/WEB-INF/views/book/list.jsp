@@ -52,7 +52,7 @@
     </div>
 
     <c:if test="${loginUser.role == 'ADMIN'}">
-        <a href="${pageContext.request.contextPath}/book/insertform" class="insertbtn">도서 등록</a>
+        <a href="${pageContext.request.contextPath}/book/insert" class="insertbtn">도서 등록</a>
     </c:if>
 </div>
     <c:forEach var="book" items="${list}">

@@ -16,7 +16,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         // 로그인이 안 되어 있다면
         if (loginUser == null) {
             // 로그인 페이지로 보내면서 메시지 전달
-            response.sendRedirect(request.getContextPath() + "/member/login?error=login");
+            response.sendRedirect(request.getContextPath() + "/book/list");
             return false; // 컨트롤러 진입 차단
         }
 
