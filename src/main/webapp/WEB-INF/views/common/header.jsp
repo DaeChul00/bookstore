@@ -18,6 +18,9 @@
 					       
 					    <a href="${pageContext.request.contextPath}/admin/memberList" 
 					       style="color:#333; font-weight:bold; text-decoration:none;">회원관리</a>
+					       
+						<a href="${pageContext.request.contextPath}/admin/stat/sales" 
+					       style="color:#333; font-weight:bold; text-decoration:none;">통계보기</a>
 					</c:if>
                     <a href="/logout" style="color:#999; text-decoration:none;">로그아웃</a>
                 </c:otherwise>
