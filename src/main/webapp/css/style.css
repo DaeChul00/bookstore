@@ -1,0 +1,43 @@
+/* 구글 폰트 (Pretendard 추천 또는 나눔명조) */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+:root {
+    --kb-green: #005a32;      /* 교보 시그니처 그린 */
+    --kb-light-green: #eef7f2; /* 연한 배경용 그린 */
+    --kb-border: #e8e8e8;     /* 구분선 색상 */
+    --kb-text: #333333;       /* 기본 텍스트 */
+    --kb-sub-text: #767676;   /* 보조 텍스트 */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+body { background-color: #fff; color: var(--kb-text); line-height: 1.6; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* 레이아웃 래퍼 */
+.wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+main { flex: 1; padding: 60px 0; background-color: #fdfdfd; }
+
+/* 버튼 스타일 */
+.btn-kb {
+    background-color: var(--kb-green);
+    color: white;
+    border: 1px solid var(--kb-green);
+    padding: 10px 20px;
+    border-radius: 0;
+    font-weight: 500;
+    cursor: pointer;
+}
+    
+/* 테이블 헤더(th)를 무조건 가운데 정렬 */
+th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+/* 데이터 부분(td)도 가운데 정렬하고 싶다면 아래 주석을 해제하세요 */
+/* td {
+    text-align: center;
+    vertical-align: middle;
+} 
+*/

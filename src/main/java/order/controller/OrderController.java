@@ -13,6 +13,7 @@ import order.model.CartVO;
 import order.model.OrderVO;
 import order.service.CartService;
 import order.service.OrderService;
+import member.model.MemberVO;
 
 @Controller
 @RequestMapping("/order")
@@ -22,15 +23,20 @@ public class OrderController {
     private CartService cartService;
 
     @Autowired
-    private OrderService orderService; // 주문 처리를 위한 서비스 (새로 추가)
+    private OrderService orderService;
+    
+    private String getLoginId(HttpSession session) {
+        MemberVO user = (MemberVO) session.getAttribute("loginUser");
+        return (user != null) ? user.getMemberId() : null;
+    }
 
     // 1. 장바구니 목록 보기 (cart.jsp 연결)
     @RequestMapping("/cart")
     public String cartList(HttpSession session, Model model) {
-        String memberId = getMemberId(session);
-        List<CartVO> list = cartService.getCartList(memberId);
-        
-        model.addAttribute("cartList", list);
+        String mid = getLoginId(session);
+        if (mid == null) return "redirect:/login"; // 로그인 안됐으면 튕겨냄
+
+        model.addAttribute("cartList", cartService.getCartList(mid));
         model.addAttribute("contentPage", "/WEB-INF/views/order/cart.jsp");
         return "layout/layout";
     }
@@ -38,7 +44,10 @@ public class OrderController {
     // 2. 장바구니에 상품 추가 (상세페이지 등에서 호출)
     @RequestMapping("/addCart")
     public String addCart(CartVO cart, HttpSession session, RedirectAttributes ra) {
-        cart.setMemberId(getMemberId(session));
+        String mid = getLoginId(session);
+        if (mid == null) return "redirect:/login";
+
+        cart.setMemberId(mid);
         if (cartService.addCart(cart)) {
             ra.addFlashAttribute("msg", "장바구니에 담겼습니다.");
         }
@@ -62,12 +71,11 @@ public class OrderController {
     // 5. 주문하기 (구매 프로세스)
     @RequestMapping("/buy")
     public String buy(HttpSession session) {
-        String memberId = getMemberId(session);
-        List<CartVO> cartList = cartService.getCartList(memberId);
-
+        String mid = getLoginId(session);
+        List<CartVO> cartList = cartService.getCartList(mid);
+        
         if (cartList != null && !cartList.isEmpty()) {
-            // 장바구니 데이터를 주문 데이터로 변환하여 저장하고 장바구니 비우기
-            orderService.processOrder(memberId, cartList);
+            orderService.processOrder(mid, cartList);
             return "redirect:/order/list";
         }
         return "redirect:/order/cart";
@@ -76,17 +84,17 @@ public class OrderController {
     // 6. 주문 내역 보기 (order-list.jsp 연결)
     @RequestMapping("/list")
     public String orderList(HttpSession session, Model model) {
-        String memberId = getMemberId(session);
-        List<OrderVO> list = orderService.getOrderList(memberId);
-        
-        model.addAttribute("orderList", list);
+        String mid = getLoginId(session);
+        if (mid == null) return "redirect:/login";
+
+        model.addAttribute("orderList", orderService.getOrderList(mid));
         model.addAttribute("contentPage", "/WEB-INF/views/order/order-list.jsp");
         return "layout/layout";
     }
 
-    // 세션에서 아이디 가져오는 공통 메서드 (중복 코드 방지)
+    // 세션에서 아이디 가져오는 공통 메서드
     private String getMemberId(HttpSession session) {
         String memberId = (String) session.getAttribute("memberId");
-        return (memberId != null) ? memberId : "user01"; // 테스트용 임시 아이디
+        return (memberId != null) ? memberId : "user01";
     }
 }

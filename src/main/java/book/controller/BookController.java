@@ -1,6 +1,9 @@
 package book.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,12 +11,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import book.model.BookVO;
 import book.service.BookService;
+import member.model.MemberVO;
 
 @Controller
 @RequestMapping("/book")
@@ -22,20 +27,28 @@ public class BookController {
 	@Autowired
 	BookService service;
 	
-	@RequestMapping("")
+	@RequestMapping("/")
 	public String defaultPage() {
 	    return "redirect:/book/list";
 	}
-	@RequestMapping("insertform")
-	public String insertform(Model model) {
-		String folder ="book";
-		String page="insertform";
-		String contentPage=String.format("/WEB-INF/views/%s/%s.jsp",folder,page);
-		model.addAttribute("contentPage",contentPage);
-		return "layout/layout";
+	@RequestMapping(value = "insert",method = RequestMethod.GET)
+	public String insertform(Model model, HttpSession session) { // HttpSession √ﬂ∞°
+	    // ººº«ø°º≠ ∑Œ±◊¿Œ ¡§∫∏ ∞°¡Æø¿±‚ (MemberVO ≈¨∑°Ω∫∏Ì¿∫ ∫ª¿Œ¿« «¡∑Œ¡ß∆Æø° ∏¬∞‘ ºˆ¡§)
+	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+
+	    // ∞¸∏Æ¿⁄∞° æ∆¥œ∏È ∏ÆΩ∫∆Æ∑Œ ∆®∞‹≥ª±‚
+	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+	        return "redirect:/book/list";
+	    }
+
+	    String folder ="book";
+	    String page="insertform";
+	    String contentPage=String.format("/WEB-INF/views/%s/%s.jsp",folder,page);
+	    model.addAttribute("contentPage",contentPage);
+	    return "layout/layout";
 	}
 	
-	@RequestMapping("insert")
+	@RequestMapping(value = "insert",method = RequestMethod.POST)
 	public  String insert(@ModelAttribute BookVO ibk, RedirectAttributes ra) {
 		
 		BookVO bk = new BookVO();
@@ -50,16 +63,18 @@ public class BookController {
 		return "redirect:/book/list";
 	}
 	@RequestMapping("list")
-	public ModelAndView list(HttpServletRequest request) {
-		System.out.println(">>> Ïª®Ìä∏Î°§Îü¨ Ï†ëÏÜç ÏÑ±Í≥µ! <<<");
-		ModelAndView mv =new ModelAndView();
-		mv.addObject("list", service.getBooks());
-		String[] paths=request.getRequestURI().split("/");
-		String contentPage=String.format("/WEB-INF/views/%s/%s.jsp", paths[1],paths[2]);
-		mv.addObject("contentPage",contentPage);
-		
-		mv.setViewName("layout/layout");
-		return mv;
+	public ModelAndView list(
+	        @RequestParam(value = "category", required = false, defaultValue = "title") String category,
+	        @RequestParam(value = "keyword", required = false) String keyword) {
+	    
+	    ModelAndView mv = new ModelAndView();
+	    // ∞Àªˆ ¡∂∞«ø° ∏¬¥¬ ∏ÆΩ∫∆Æ ∞°¡Æø¿±‚
+	    List<BookVO> list = service.getBooks(category, keyword);
+	    
+	    mv.addObject("list", list);
+	    mv.addObject("contentPage", "/WEB-INF/views/book/list.jsp");
+	    mv.setViewName("layout/layout");
+	    return mv;
 	}
 	@RequestMapping("view")
 	public ModelAndView view(int id, HttpServletRequest request) {
@@ -75,21 +90,27 @@ public class BookController {
 		mv.setViewName("layout/layout");
 		return mv;
 	}
-	@RequestMapping("updateform")
-	public ModelAndView updateform(int id,HttpServletRequest request) {
-		ModelAndView mv = new ModelAndView();
-		mv.addObject("bk", service.getBook(id));
+	@RequestMapping(value = "update",method = RequestMethod.GET)
+	public ModelAndView updateform(int id, HttpServletRequest request, HttpSession session) {
+		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+
+	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+	        return new ModelAndView("redirect:/book/list");
+	    }
+
+	    ModelAndView mv = new ModelAndView();
+	    mv.addObject("bk", service.getBook(id));
 		
-		String[] paths=request.getRequestURI().split("/");
-		String contentPage=String.format("/WEB-INF/views/%s/%s.jsp", paths[1],paths[2]);
+	    String folder ="book";
+	    String page="updateform";
+	    String contentPage=String.format("/WEB-INF/views/%s/%s.jsp",folder,page);
 		
 		mv.addObject("contentPage",contentPage);
-		
 		
 		mv.setViewName("layout/layout");
 		return mv;
 	}
-	@RequestMapping("update")
+	@RequestMapping(value = "update",method = RequestMethod.POST)
 	public String update(BookVO bk, RedirectAttributes ra) {
 		ra.addFlashAttribute("kind","update");
 		System.out.println(bk);
@@ -100,11 +121,22 @@ public class BookController {
 		}
 		return "redirect:/book/view?id="+bk.getId();
 	}
-//	@RequestMapping("delete")
-//	public String delete(int id) {
-//		
-//		service.delete(id);
-//		return "redirect:/book/list";
-//	}
+	
+	@RequestMapping("delete")
+	public String delete(@RequestParam("id") int id, RedirectAttributes ra, HttpSession session) {
+	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
+	    // ∞¸∏Æ¿⁄∞° æ∆¥œ∏È ªË¡¶ ∫“∞° 
+	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+	        return "redirect:/book/list";
+	    }
+
+	    ra.addFlashAttribute("kind", "delete");
+	    if(service.delete(id)) {
+	        ra.addFlashAttribute("message", "success");
+	    } else {
+	        ra.addFlashAttribute("message", "fail");
+	    }
+	    return "redirect:/book/list";
+	}
 }

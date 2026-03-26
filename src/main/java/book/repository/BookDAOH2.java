@@ -143,5 +143,42 @@ public class BookDAOH2 implements BookDAO{
 		}
     }
 	
+	@Override
+	public int delete(int id) {
+	    String sql = "DELETE FROM BOOK WHERE ID = ?";
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        ps.setInt(1, id);
+	        return ps.executeUpdate();
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return 0;
+	    }
+	}
+	
+	@Override
+	public List<BookVO> findAll(String category, String keyword) {
+	    List<BookVO> list = new ArrayList<>();
+	    String sql = "SELECT * FROM BOOK";
+	    
+	    // 검색 조건이 있을 경우 SQL문 동적 생성
+	    if (keyword != null && !keyword.trim().isEmpty()) {
+	        sql += " WHERE " + category + " LIKE ?";
+	    }
+	    sql += " ORDER BY ID DESC";
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	        if (keyword != null && !keyword.trim().isEmpty()) {
+	            ps.setString(1, "%" + keyword + "%");
+	        }
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                list.add(resultSetToBook(rs));
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
 	
 }

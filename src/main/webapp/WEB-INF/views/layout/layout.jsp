@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -6,44 +7,8 @@
 <meta charset="UTF-8">
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
 
-<style>
-
-body{
-    margin:0;
-    height:100vh;
-    overflow:hidden;   /* body 스크롤 제거 */
-}
-
-/* 전체 레이아웃 */
-.wrapper{
-    height:100%;
-    display:flex;
-    flex-direction:column;
-}
-
-/* header */
-header{
-    height:80px;
-    background:#343a40;
-    color:white;
-}
-
-/* footer */
-footer{
-    height:60px;
-    background:#343a40;
-    color:white;
-}
-
-/* main */
-main{
-    flex:1;
-    overflow-y:auto;   /* 내부 스크롤 */
-    padding:20px;
-}
-
-</style>
 </head>
 
 <body>
@@ -66,6 +31,10 @@ main{
     </footer>
 
 </div>
-
+<c:if test="${param.error == 'auth'}">
+    <script>
+        alert("관리자만 접근 가능한 페이지입니다.");
+    </script>
+</c:if>
 </body>
 </html>
