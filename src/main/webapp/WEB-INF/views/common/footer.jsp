@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
+<<<<<<< HEAD
 	pageEncoding="UTF-8"%>
 <div class="footer">
 	<footer>
@@ -9,3 +10,7 @@
 		</p>
 	</footer>
 </div>
+=======
+    pageEncoding="UTF-8"%>
+header
+>>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
