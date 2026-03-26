@@ -1,0 +1,161 @@
+@charset "UTF-8";
+
+/* reset */
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 전체 레이아웃 */
+.wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* header / footer 공통 */
+header, footer {
+    background: #343a40;
+    color: white;
+}
+
+header {
+    height: 80px;
+}
+
+footer {
+    height: 60px;
+    padding: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* main */
+main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* navbar */
+nav {
+    display: flex;
+    padding: 10px;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #263343;
+    color: white;
+}
+
+/* 리스트 공통 */
+.navbar_logo,
+.navbar_menu,
+.navbar_icon {
+    display: flex;
+    list-style: none;
+}
+
+/* 간격 */
+.navbar_logo > li {
+    padding: 8px 0;
+}
+
+.navbar_menu > li {
+    padding: 8px 12px;
+}
+
+.navbar_icon > li {
+    padding: 8px 5px;
+}
+
+/* 메뉴 hover */
+.navbar_menu > li:hover {
+    background-color: white;
+    color: black;
+    border-radius: 5px;
+}
+
+/* 링크 */
+.navbar_menu > li > a {
+    color: white;
+    text-decoration: none;
+}
+
+.navbar_menu > li:hover > a {
+    color: black;
+}
+
+/* 햄버거 */
+.fa-bars {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+/* 반응형 */
+@media screen and (max-width:768px) {
+    .navbar {
+        flex-direction: column;
+    }
+
+    .navbar_menu {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .navbar_menu > li {
+        text-align: center;
+    }
+
+    .fa-bars {
+        display: block;
+    }
+
+    .main > aside {
+        visibility: hidden;
+        width: 0;
+    }
+}
+
+/* footer 링크 */
+footer a {
+    color: #aaa;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+footer a:hover {
+    color: #fff;
+}
+
+/* login */
+.login {
+    background-color: #f8f9fa;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+}
+
+.index-title{
+	background-color: aqua;
+}
+
+.index>p>img{
+	width: 100px;
+}
+/* 위 코드랑 같음, 하위 모든 태그 중 img 태그에 대한 설정 */
+.index img{
+	width: 100px;
+}
