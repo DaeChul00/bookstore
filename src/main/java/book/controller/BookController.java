@@ -27,16 +27,24 @@ public class BookController {
 	@Autowired
 	BookService service;
 	
-	@RequestMapping("/")
-	public String defaultPage() {
-	    return "redirect:/book/list";
+	@RequestMapping("")
+	public String main(Model model) {
+
+	    List<BookVO> topRatedList = service.getTopRatedBooks();
+	    List<BookVO> newBookList = service.getNewBooks();
+
+	    model.addAttribute("topRatedList", topRatedList);
+	    model.addAttribute("newBookList", newBookList);
+
+	    model.addAttribute("contentPage", "/WEB-INF/views/main.jsp");
+	    return "layout/layout";
 	}
-	@RequestMapping(value = "insert",method = RequestMethod.GET)
-	public String insertform(Model model, HttpSession session) { // HttpSession Ãß°¡
-	    // ¼¼¼Ç¿¡¼­ ·Î±×ÀÎ Á¤º¸ °¡Á®¿À±â (MemberVO Å¬·¡½º¸íÀº º»ÀÎÀÇ ÇÁ·ÎÁ§Æ®¿¡ ¸Â°Ô ¼öÁ¤)
+	@RequestMapping(value = "insertform",method = RequestMethod.GET)
+	public String insertform(Model model, HttpSession session) { // HttpSession ï¿½ß°ï¿½
+	    // ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ ï¿½Î±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (MemberVO Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Â°ï¿½ ï¿½ï¿½ï¿½ï¿½)
 	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
-	    // °ü¸®ÀÚ°¡ ¾Æ´Ï¸é ¸®½ºÆ®·Î Æ¨°Ü³»±â
+	    // ï¿½ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½Æ´Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ Æ¨ï¿½Ü³ï¿½ï¿½ï¿½
 	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
 	        return "redirect:/book/list";
 	    }
@@ -68,7 +76,7 @@ public class BookController {
 	        @RequestParam(value = "keyword", required = false) String keyword) {
 	    
 	    ModelAndView mv = new ModelAndView();
-	    // °Ë»ö Á¶°Ç¿¡ ¸Â´Â ¸®½ºÆ® °¡Á®¿À±â
+	    // ï¿½Ë»ï¿½ ï¿½ï¿½ï¿½Ç¿ï¿½ ï¿½Â´ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	    List<BookVO> list = service.getBooks(category, keyword);
 	    
 	    mv.addObject("list", list);
@@ -126,7 +134,7 @@ public class BookController {
 	public String delete(@RequestParam("id") int id, RedirectAttributes ra, HttpSession session) {
 	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
-	    // °ü¸®ÀÚ°¡ ¾Æ´Ï¸é »èÁ¦ ºÒ°¡ 
+	    // ï¿½ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½Æ´Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò°ï¿½ 
 	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
 	        return "redirect:/book/list";
 	    }

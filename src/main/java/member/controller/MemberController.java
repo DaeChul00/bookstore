@@ -74,7 +74,7 @@ public class MemberController {
         ra.addFlashAttribute("msg", "정보가 수정되었습니다.");
         
         // 로그인이 풀리지 않은 상태로 리스트로 이동합니다.
-        return "redirect:/book/list"; 
+        return "redirect:/book"; 
     }
     
     @RequestMapping("/member/withdraw")
@@ -91,6 +91,6 @@ public class MemberController {
             ra.addFlashAttribute("msg", "회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.");
         }
         
-        return "redirect:/book/list";
+        return "redirect:/book";
     }
 }

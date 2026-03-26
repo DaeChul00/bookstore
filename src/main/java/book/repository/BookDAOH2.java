@@ -158,26 +158,80 @@ public class BookDAOH2 implements BookDAO{
 	@Override
 	public List<BookVO> findAll(String category, String keyword) {
 	    List<BookVO> list = new ArrayList<>();
-	    String sql = "SELECT * FROM BOOK";
-	    
-	    // ∞Àªˆ ¡∂∞«¿Ã ¿÷¿ª ∞ÊøÏ SQLπÆ µø¿˚ ª˝º∫
-	    if (keyword != null && !keyword.trim().isEmpty()) {
-	        sql += " WHERE " + category + " LIKE ?";
-	    }
-	    sql += " ORDER BY ID DESC";
 
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+	    //1. category Î®ºÏ†Ä Í≤ÄÏ¶ù (Ìï≠ÏÉÅ Ïã§Ìñâ)
+	    if (!"title".equals(category) &&
+	        !"author".equals(category) &&
+	        !"publisher".equals(category)) {
+	        category = "title";
+	    }
+
+	    StringBuilder sql = new StringBuilder("SELECT * FROM BOOK");
+
+	    //2. keyword ÏûàÏùÑ ÎïåÎßå WHERE Ï∂îÍ∞Ä
+	    if (keyword != null && !keyword.trim().isEmpty()) {
+	        sql.append(" WHERE ").append(category).append(" LIKE ?");
+	    }
+
+	    sql.append(" ORDER BY ID DESC");
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+	        //3. ÌååÎùºÎØ∏ÌÑ∞ ÏÑ∏ÌåÖ
 	        if (keyword != null && !keyword.trim().isEmpty()) {
 	            ps.setString(1, "%" + keyword + "%");
 	        }
+
 	        try (ResultSet rs = ps.executeQuery()) {
 	            while (rs.next()) {
 	                list.add(resultSetToBook(rs));
 	            }
 	        }
+
 	    } catch (SQLException e) {
 	        e.printStackTrace();
 	    }
+
+	    return list;
+	}
+
+	@Override
+	public List<BookVO> findTopRatedBooks() {
+	    List<BookVO> list = new ArrayList<>();
+	    String sql = "SELECT * FROM BOOK ORDER BY RATING DESC LIMIT 8";
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        while (rs.next()) {
+	            list.add(resultSetToBook(rs));
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return list;
+	}
+
+	@Override
+	public List<BookVO> findNewBooks() {
+	    List<BookVO> list = new ArrayList<>();
+	    
+	    // ÏµúÏã†Ïàú (id Í∏∞Ï§Ä)
+	    String sql = "SELECT * FROM BOOK ORDER BY ID DESC LIMIT 8";
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        while (rs.next()) {
+	            list.add(resultSetToBook(rs));
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
 	    return list;
 	}
 	
