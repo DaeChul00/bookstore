@@ -155,7 +155,12 @@ footer a:hover {
 .index>p>img{
 	width: 100px;
 }
+
 /* 위 코드랑 같음, 하위 모든 태그 중 img 태그에 대한 설정 */
 .index img{
 	width: 100px;
 }
+
+
+
+
