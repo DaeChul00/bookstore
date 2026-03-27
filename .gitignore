@@ -1,0 +1,36 @@
+# === OS generated files ===
+.DS_Store
+Thumbs.db
+
+# === Java / Maven ===
+target/
+bin/
+*.class
+*.log
+*.gz
+
+# === Eclipse (Heejo님 환경) ===
+.metadata/
+.classpath
+.project
+.settings/
+.recommenders/
+RemoteSystemsTempFiles/
+*.launch
+
+# === IntelliJ (팀원 환경) ===
+.idea/
+*.iml
+out/
+gen/
+.navigation/
+
+# === H2 Database (로컬 DB 파일) ===
+# DB 파일이 커밋되면 병합 시 데이터 충돌이 발생하므로 반드시 제외
+*.mv.db
+*.trace.db
+
+# === Temporary & Backup ===
+*.tmp
+*.bak
+*.swp
