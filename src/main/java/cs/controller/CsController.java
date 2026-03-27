@@ -32,7 +32,7 @@ public class CsController {
 
     @RequestMapping("")
     public String defaultPage() {
-        return "redirect:/cs/list";
+        return "redirect:/cs/csList";
     }
 
     // 등록 폼
@@ -51,14 +51,14 @@ public class CsController {
         boolean success = service.insert(cv);
         ra.addFlashAttribute("message", success ? "success" : "fail");
 
-        return "redirect:/cs/list";
+        return "redirect:/cs/csList";
     }
 
     // 목록 조회
-    @RequestMapping("list")
-    public ModelAndView list() {
-        ModelAndView mv = render("list");
-        mv.addObject("list", service.getCS());
+    @RequestMapping("csList")
+    public ModelAndView csList() {
+        ModelAndView mv = render("csList");
+        mv.addObject("csList", service.getCS());
         return mv;
     }
 
@@ -95,6 +95,6 @@ public class CsController {
         boolean success = service.delete(id);
         ra.addFlashAttribute("message", success ? "success" : "fail");
         
-        return "redirect:/cs/list";
+        return "redirect:/cs/csList";
     }
 }

@@ -24,10 +24,10 @@
             </tr>
         </thead>
         <tbody class="text-center">
-            <c:if test="${empty list}">
+            <c:if test="${empty csList}">
                 <tr><td colspan="5">등록된 문의사항이 없습니다.</td></tr>
             </c:if>
-            <c:forEach var="item" items="${list}">
+            <c:forEach var="item" items="${csList}">
                 <tr>
                     <td>${item.id}</td>
                     <td class="text-start ps-4" style="cursor: pointer;" onclick="location.href='view?id=${item.id}'">
