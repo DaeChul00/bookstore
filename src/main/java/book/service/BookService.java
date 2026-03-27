@@ -35,5 +35,12 @@ public class BookService {
 	public List<BookVO> getBooks(String category, String keyword) {
 	    return dao.findAll(category, keyword);
 	}
+	public List<BookVO> getTopRatedBooks(){
+	    return dao.findTopRatedBooks();
+	}
+
+	public List<BookVO> getNewBooks(){
+	    return dao.findNewBooks();
+	}
 
 }

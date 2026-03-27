@@ -11,4 +11,6 @@ public interface BookDAO {
 	public int update(BookVO book);
 	public int delete(int id);
 	public List<BookVO> findAll(String category, String keyword);
+	public List<BookVO> findTopRatedBooks();
+	public List<BookVO> findNewBooks();
 }

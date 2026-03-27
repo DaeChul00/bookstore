@@ -19,19 +19,6 @@
 <div class="book-container">
     <div class="headline">
         <h2 style="margin:0; color:#2c3e50;">전체 도서 목록</h2>
-        <div class="search-area" style="display: flex; gap: 10px;">
-            <a href="${pageContext.request.contextPath}/order/cart" class="insertbtn" style="background-color: #e67e22;">🛒 장바구니</a> 
-            
-            <form action="${pageContext.request.contextPath}/book/list" method="get" style="display: flex; gap: 5px;">
-                <select name="category" style="padding: 5px; border: 1px solid #ccc; border-radius: 4px;">
-                    <option value="title">제목</option>
-                    <option value="author">저자</option>
-                    <option value="publisher">출판사</option>
-                </select>
-                <input type="text" name="keyword" placeholder="검색어를 입력하세요" style="padding: 5px 10px; border: 1px solid #ccc; border-radius: 4px; width: 200px;">
-                <button type="submit" class="insertbtn" style="padding: 5px 15px;">검색</button>
-            </form>
-        </div>
     </div>
 
     <c:if test="${loginUser.role == 'ADMIN'}">
