@@ -1,5 +1,4 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-<<<<<<< HEAD
 	pageEncoding="UTF-8"%>
 <div class="header">
 	<nav class="navbar">
@@ -27,7 +26,3 @@
 
 	</nav>
 </div>
-=======
-    pageEncoding="UTF-8"%>
-footer
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5

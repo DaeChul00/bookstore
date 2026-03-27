@@ -7,11 +7,7 @@
 	</configSuffixes>
 	<enableImports><![CDATA[false]]></enableImports>
 	<configs>
-<<<<<<< HEAD
 		<config>src/main/webapp/WEB-INF/web.xml</config>
-=======
-		<config>src/main/webapp/WEB-INF/dispatcher-servlet.xml</config>
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 	</configs>
 	<autoconfigs>
 	</autoconfigs>

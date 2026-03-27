@@ -1,19 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-<<<<<<< HEAD
     <wb-module deploy-name="springmvcbasic-0.0.1-SNAPSHOT">
-=======
-    <wb-module deploy-name="bookprj-0.0.1-SNAPSHOT">
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
         <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
         <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
-<<<<<<< HEAD
         <property name="java-output-path" value="/book/target/classes"/>
         <property name="context-root" value="springmvcbasic"/>
-=======
-        <property name="context-root" value="bookprj"/>
-        <property name="java-output-path" value="/bookprj/target/classes"/>
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
     </wb-module>
 </project-modules>

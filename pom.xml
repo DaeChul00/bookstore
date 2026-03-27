@@ -3,11 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.my</groupId>
-<<<<<<< HEAD
 	<artifactId>springmvcbasic</artifactId>
-=======
-	<artifactId>bookprj</artifactId>
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<build>
@@ -23,138 +19,77 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<dependencies>
-<<<<<<< HEAD
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jsp-api</artifactId>
 			<version>9.0.71</version>
 		</dependency>
-<<<<<<< HEAD
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-webmvc -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
 			<version>5.3.39</version>
 		</dependency>
-<<<<<<< HEAD
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<version>1.18.38</version>
 		</dependency>
-<<<<<<< HEAD
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<version>2.4.240</version>
-<<<<<<< HEAD
 		</dependency>
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
 			<artifactId>ojdbc11</artifactId>
 			<version>23.8.0.25.04</version>
 		</dependency>
-=======
-			<scope>runtime</scope>
-		</dependency>
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-jdbc -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
 			<version>5.3.39</version>
 		</dependency>
-<<<<<<< HEAD
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>jstl</artifactId>
 			<version>1.2</version>
 		</dependency>
-<<<<<<< HEAD
 		<!-- https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
-=======
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>commons-fileupload</groupId>
 			<artifactId>commons-fileupload</artifactId>
 			<version>1.6.0</version>
 		</dependency>
-<<<<<<< HEAD
 		<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
-=======
-
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.19.0</version>
 		</dependency>
-<<<<<<< HEAD
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.10.0</version>
 		</dependency>
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<!-- SLF4J API -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-<<<<<<< HEAD
 			<version>2.0.9</version>
 			<!-- 최신 안정 버전 사용 -->
 		</dependency>
-=======
-			<version>2.0.9</version> <!-- 최신 안정 버전 사용 -->
-		</dependency>
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<!-- Logback (SLF4J 구현체) -->
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.4.11</version>
 		</dependency>
-<<<<<<< HEAD
-=======
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>2.0.9</version>
 		</dependency>
-<<<<<<< HEAD
-=======
-
-
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>jstl</artifactId>
-			<version>1.2</version>
-		</dependency>
-
-
-
->>>>>>> ba059d2ee74a626b652c993a44542d77f7ccd3d5
 	</dependencies>
 </project>
