@@ -7,7 +7,7 @@
         http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
-    <context:component-scan base-package="book, member, admin, order" />
+    <context:component-scan base-package="book,cs,member,admin,order,intercepter" />
 
     <mvc:interceptors>
         <mvc:interceptor>

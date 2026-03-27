@@ -90,6 +90,9 @@
 		<!-- 메뉴 -->
 		<nav
 			style="font-size: 14px; display: flex; align-items: center; gap: 15px;">
+			
+			<a href="${pageContext.request.contextPath}/cs/csList" style="text-decoration: none; color: #333;">고객센터</a>
+			
 			<a href="${pageContext.request.contextPath}/order/cart"
 				style="text-decoration: none; color: #e67e22; font-weight: bold;">
 				🛒 장바구니 </a>
