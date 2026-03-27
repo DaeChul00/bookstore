@@ -28,8 +28,9 @@ public class StatController {
         // 평점 TOP 5 도서 데이터
         model.addAttribute("topBooks", statService.getTopRatedBooks());
         
+        model.addAttribute("contentPage", "/WEB-INF/views/admin/sales-stats.jsp");
+        
         // WEB-INF/views/admin/sales-stats.jsp로 이동
-        return "admin/sales-stats";
+        return "layout/layout";
     }
-	
 }

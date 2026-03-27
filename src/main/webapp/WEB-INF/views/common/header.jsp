@@ -112,6 +112,8 @@
 					<c:if test="${loginUser.role == 'ADMIN'}">
 						<a href="${pageContext.request.contextPath}/admin/book/list"
 							style="font-weight: bold;">도서관리</a>
+						<a href="${pageContext.request.contextPath}/admin/stat/sales" 
+       style="font-weight: bold; color: #2c3e50;">📊통계보기</a>
 
 						<a href="${pageContext.request.contextPath}/admin/memberList"
 							style="font-weight: bold;">회원관리</a>

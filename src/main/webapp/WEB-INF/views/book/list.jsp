@@ -23,7 +23,7 @@
 
     <c:if test="${loginUser.role == 'ADMIN'}">
         <div style="text-align: right; margin-bottom: 20px;">
-            <a href="${pageContext.request.contextPath}/book/insert" class="insertbtn">도서 등록</a>
+            <a href="${pageContext.request.contextPath}/book/insertform" class="insertbtn">도서 등록</a>
         </div>
     </c:if>
 

@@ -58,7 +58,7 @@ public class CsDAOH2 implements CsDAO {
 			}
 			return list;
 		} catch (SQLException e) {
-			System.out.println("¸®½ºÆ® Á¶È¸ ½ÇÆĞ(findAll)");
+			System.out.println("Â¸Â®Â½ÂºÃ†Â® ÃÂ¶ÃˆÂ¸ Â½Ã‡Ã†Ã(findAll)");
 			e.printStackTrace();
 			return null;
 		}

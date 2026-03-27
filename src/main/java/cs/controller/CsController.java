@@ -13,8 +13,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import cs.model.CsVO;
-import cs.model.insertCsVO;
 import cs.service.CsService;
+import cs.model.CsInsertVO;
 
 @Controller
 @RequestMapping("/cs")
@@ -25,7 +25,7 @@ public class CsController {
 
     private ModelAndView render(String pageName) {
         ModelAndView mv = new ModelAndView("layout/layout");
-        // /WEB-INF/views/cs/ÆÄÀÏ¸í.jsp ±¸Á¶·Î °íÁ¤ (ÄÁÆ®·Ñ·¯ ¼öÁØ¿¡¼­ °ü¸®)
+        // /WEB-INF/views/cs/íŒŒì¼ëª….jsp êµ¬ì¡°ë¡œ ê³ ì • (ì»¨íŠ¸ë¡¤ëŸ¬ ìˆ˜ì¤€ì—ì„œ ê´€ë¦¬)
         mv.addObject("contentPage", String.format("/WEB-INF/views/cs/%s.jsp", pageName));
         return mv;
     }
@@ -35,15 +35,22 @@ public class CsController {
         return "redirect:/cs/csList";
     }
 
-    // µî·Ï Æû
+//    // ë“±ë¡ í¼
+//    @RequestMapping("insertform")
+//    public ModelAndView insertform() {
+//        return render("insertform");
+//    }
+    
     @RequestMapping("insertform")
-    public ModelAndView insertform() {
-        return render("insertform");
+    public ModelAndView csWrite() {
+        ModelAndView mv = render("csWrite");
+        mv.addObject("csWrite", service.getCS());
+        return mv;
     }
 
-    // µî·Ï Ã³¸®
+    // ë“±ë¡ ì²˜ë¦¬
     @RequestMapping("insert")
-    public String insert(@ModelAttribute insertCsVO ics, RedirectAttributes ra) {
+    public String insert(@ModelAttribute CsInsertVO ics, RedirectAttributes ra) {
         CsVO cv = new CsVO();
         BeanUtils.copyProperties(ics, cv);
 
@@ -54,7 +61,7 @@ public class CsController {
         return "redirect:/cs/csList";
     }
 
-    // ¸ñ·Ï Á¶È¸
+    // ëª©ë¡ ì¡°íšŒ
     @RequestMapping("csList")
     public ModelAndView csList() {
         ModelAndView mv = render("csList");
@@ -62,7 +69,7 @@ public class CsController {
         return mv;
     }
 
-    // »ó¼¼ Á¶È¸
+    // ìƒì„¸ ì¡°íšŒ
     @RequestMapping("view")
     public ModelAndView view(@RequestParam("id") int id) {
         ModelAndView mv = render("view");
@@ -70,7 +77,7 @@ public class CsController {
         return mv;
     }
 
-    // ¼öÁ¤ Æû
+    // ìˆ˜ì • í¼
     @RequestMapping("updateform")
     public ModelAndView updateform(@RequestParam("id") int id) {
         ModelAndView mv = render("updateform");
@@ -78,7 +85,7 @@ public class CsController {
         return mv;
     }
 
-    // ¼öÁ¤ Ã³¸®
+    // ìˆ˜ì • ì²˜ë¦¬
     @RequestMapping("update")
     public String update(CsVO cv, RedirectAttributes ra) {
         ra.addFlashAttribute("kind", "update");
@@ -88,7 +95,7 @@ public class CsController {
         return "redirect:/cs/view?id=" + cv.getId();
     }
 
-    // »èÁ¦ Ã³¸®
+    // ì‚­ì œ ì²˜ë¦¬
     @RequestMapping("delete")
     public String delete(@RequestParam("id") int id, RedirectAttributes ra) {
         ra.addFlashAttribute("kind", "delete");
