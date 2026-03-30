@@ -20,7 +20,7 @@ public class CsDAOH2 implements CsDAO {
 
 	@Override
 	public int save(CsVO cv) {
-		String sql = "insert into cs (username, title, content, category) values (?,?,?,?)";
+		String sql = "INSERT INTO CS (USERNAME, TITLE, CONTENT, CATEGORY) VALUES (?,?,?,?)";
 		try (PreparedStatement ps = conn.prepareStatement(sql)) {
 			ps.setString(1, cv.getUserName());
 			ps.setString(2, cv.getTitle());
@@ -38,27 +38,31 @@ public class CsDAOH2 implements CsDAO {
 		String sql = "SELECT * FROM CS ORDER BY ID DESC";
 		try (PreparedStatement ps = conn.prepareStatement(sql);
 			 ResultSet rs = ps.executeQuery()) {
+
 			List<CsVO> list = new ArrayList<>();
+
 			while (rs.next()) {
 				CsVO cv = CsVO.builder()
-						.id(rs.getInt("id"))
-						.userName(rs.getString("username"))
-						.title(rs.getString("title"))
-						.content(rs.getString("content"))
-						.category(rs.getString("category"))
-						.status(rs.getString("status"))
-						.answer(rs.getString("answer"))
-						.adminId(rs.getString("adminId"))
-						.createdAt(rs.getTimestamp("createdAt"))
-						.answeredAt(rs.getTimestamp("answeredAt"))
-						.updatedAt(rs.getTimestamp("updatedAt")) //
-						.deleted(rs.getBoolean("deleted"))
+						.id(rs.getInt("ID"))
+						.userName(rs.getString("USERNAME"))
+						.title(rs.getString("TITLE"))
+						.content(rs.getString("CONTENT"))
+						.category(rs.getString("CATEGORY"))
+						.status(rs.getString("STATUS"))
+						.answer(rs.getString("ANSWER"))
+						.adminId(rs.getString("ADMIN_ID"))
+						.createdAt(rs.getTimestamp("CREATED_AT"))
+						.answeredAt(rs.getTimestamp("ANSWERED_AT"))
+						.updatedAt(rs.getTimestamp("UPDATED_AT"))
+						.deleted(rs.getBoolean("IS_DELETED"))
 						.build();
+
 				list.add(cv);
 			}
 			return list;
+
 		} catch (SQLException e) {
-			System.out.println("¸®½ºÆ® Á¶È¸ ½ÇÆÐ(findAll)");
+			System.out.println("(findAll)");
 			e.printStackTrace();
 			return null;
 		}
@@ -69,21 +73,22 @@ public class CsDAOH2 implements CsDAO {
 		String sql = "SELECT * FROM CS WHERE ID = ?";
 		try (PreparedStatement ps = conn.prepareStatement(sql)) {
 			ps.setInt(1, id);
+
 			try (ResultSet rs = ps.executeQuery()) {
 				if (rs.next()) {
 					return CsVO.builder()
-							.id(rs.getInt("id"))
-							.userName(rs.getString("username"))
-							.title(rs.getString("title"))
-							.content(rs.getString("content"))
-							.category(rs.getString("category"))
-							.status(rs.getString("status"))
-							.answer(rs.getString("answer"))
-							.adminId(rs.getString("adminId"))
-							.createdAt(rs.getTimestamp("createdAt"))
-							.answeredAt(rs.getTimestamp("answeredAt"))
-							.updatedAt(rs.getTimestamp("updatedAt")) 
-							.deleted(rs.getBoolean("deleted"))
+							.id(rs.getInt("ID"))
+							.userName(rs.getString("USERNAME"))
+							.title(rs.getString("TITLE"))
+							.content(rs.getString("CONTENT"))
+							.category(rs.getString("CATEGORY"))
+							.status(rs.getString("STATUS"))
+							.answer(rs.getString("ANSWER"))
+							.adminId(rs.getString("ADMIN_ID"))
+							.createdAt(rs.getTimestamp("CREATED_AT"))
+							.answeredAt(rs.getTimestamp("ANSWERED_AT"))
+							.updatedAt(rs.getTimestamp("UPDATED_AT"))
+							.deleted(rs.getBoolean("IS_DELETED"))
 							.build();
 				}
 			}
@@ -95,7 +100,7 @@ public class CsDAOH2 implements CsDAO {
 
 	@Override
 	public int update(CsVO cv) {
-		String sql = "UPDATE CS SET STATUS=?, ANSWER=?, ADMINID=? WHERE ID=?";
+		String sql = "UPDATE CS SET STATUS=?, ANSWER=?, ADMIN_ID=? WHERE ID=?";
 		try (PreparedStatement ps = conn.prepareStatement(sql)) {
 			ps.setString(1, cv.getStatus());
 			ps.setString(2, cv.getAnswer());
