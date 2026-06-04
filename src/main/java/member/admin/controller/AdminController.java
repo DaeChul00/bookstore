@@ -15,6 +15,7 @@ import book.model.BookVO;
 import book.service.BookService;
 import member.model.MemberVO;
 import member.service.MemberService;
+import order.repository.OrderDAOH2;
 
 @Controller
 @RequestMapping("/admin")
@@ -80,5 +81,27 @@ public class AdminController {
         
         ra.addFlashAttribute("msg", memberId + "             Ǿ    ϴ .");
         return "redirect:/admin/memberList";
+    }
+    
+    /* =================================================================
+     * 🆕 [추가 기능] 관리자 전용 주문/배송 관리
+     * ================================================================= */
+    
+    @Autowired
+    private OrderDAOH2 orderDAOH2;
+    
+    // 관리자용 전체 회원 주문 목록 보기
+    @RequestMapping("/order/list")
+    public String adminOrderList(Model model) {
+        model.addAttribute("adminOrderList", orderDAOH2.findAllOrdersForAdmin());
+        model.addAttribute("contentPage", "/WEB-INF/views/admin/adminOrderList.jsp");
+        return "layout/layout";
+    }
+
+    // 관리자용 배송 상태 변경 처리
+    @RequestMapping("/order/updateStatus")
+    public String updateDeliveryStatus(@RequestParam int orderId, @RequestParam String deliveryStatus) {
+    	orderDAOH2.updateDeliveryStatus(orderId, deliveryStatus);
+        return "redirect:/order/list"; // 수정 완료 후 관리자 목록으로 리다이렉트
     }
 }

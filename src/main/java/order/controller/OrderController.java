@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import order.model.CartVO;
 import order.model.OrderVO;
+import order.repository.OrderDAOH2;
 import order.service.CartService;
 import order.service.OrderService;
 import member.model.MemberVO;
@@ -24,6 +25,7 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+
     
     private String getLoginId(HttpSession session) {
         MemberVO user = (MemberVO) session.getAttribute("loginUser");
@@ -97,4 +99,5 @@ public class OrderController {
         String memberId = (String) session.getAttribute("memberId");
         return (memberId != null) ? memberId : "user01";
     }
+    
 }

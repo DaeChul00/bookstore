@@ -9,7 +9,7 @@
     border-radius: 50px;
     padding: 5px;
     border: 1px solid #ddd;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease;+
 }
 
 /* 포커스 시 강조 */
@@ -88,40 +88,40 @@
 		</form>
 
 		<!-- 메뉴 -->
-		<nav
-			style="font-size: 14px; display: flex; align-items: center; gap: 15px;">
-			
-			<a href="${pageContext.request.contextPath}/cs/csList" style="text-decoration: none; color: #333;">고객센터</a>
-			
-			<a href="${pageContext.request.contextPath}/order/cart"
-				style="text-decoration: none; color: #e67e22; font-weight: bold;">
-				🛒 장바구니 </a>
-
-			<c:choose>
-				<c:when test="${empty loginUser}">
-					<a href="/login" style="text-decoration: none; color: #333;">로그인</a>
-					<a href="/signup" style="text-decoration: none; color: #333;">회원가입</a>
-				</c:when>
-
-				<c:otherwise>
-					<span><strong>${loginUser.name}</strong>님</span>
-
-					<a href="${pageContext.request.contextPath}/member/update"
-						style="color: #666; font-size: 12px;">[정보수정]</a>
-
-					<c:if test="${loginUser.role == 'ADMIN'}">
-						<a href="${pageContext.request.contextPath}/admin/book/list"
-							style="font-weight: bold;">도서관리</a>
-						<a href="${pageContext.request.contextPath}/admin/stat/sales" 
-       style="font-weight: bold; color: #2c3e50;">📊통계보기</a>
-
-						<a href="${pageContext.request.contextPath}/admin/memberList"
-							style="font-weight: bold;">회원관리</a>
+		<nav style="font-size: 13px; display: flex; align-items: center; gap: 10px; white-space: nowrap;">
+		    <a href="${pageContext.request.contextPath}/cs/csList" style="text-decoration: none; color: #333;">고객센터</a>
+		    <a href="${pageContext.request.contextPath}/order/cart" style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">🛒 장바구니 </a>
+		
+		    <c:choose>
+		        <c:when test="${empty loginUser}">
+		            <a href="/login" style="text-decoration: none; color: #333;">로그인</a>
+		            <a href="/signup" style="text-decoration: none; color: #333;">회원가입</a>
+		        </c:when>
+		        <c:otherwise>
+		        	<c:if test="${loginUser.role != 'ADMIN'}">
+		            	<a href="${pageContext.request.contextPath}/order/list" style="text-decoration: none; color: #d9534f; font-weight: bold;">📦 주문내역</a>
 					</c:if>
-
-					<a href="/logout" style="color: #999;">로그아웃</a>
-				</c:otherwise>
-			</c:choose>
+		            <span><strong>${loginUser.name}</strong>님</span>
+		            <a href="${pageContext.request.contextPath}/member/update" style="color: #666; font-size: 12px; margin-right: 5px;">[정보수정]</a>
+		            
+		            <c:if test="${loginUser.role == 'ADMIN'}">
+		                <span style="color: #ccc; margin: 0 5px;">|</span>
+		                <a href="${pageContext.request.contextPath}/admin/book/list" 
+		                   style="text-decoration: none; color: #005a32; font-weight: bold;">📚 도서관리</a>
+		                
+		                <a href="${pageContext.request.contextPath}/admin/order/list" 
+		                   style="text-decoration: none; color: #d35400; font-weight: bold;">📦 주문관리</a>
+		                
+		                <a href="${pageContext.request.contextPath}/admin/stat/sales" 
+		                   style="text-decoration: none; color: #2980b9; font-weight: bold;">📊 통계보기</a>
+		                
+						<a href="${pageContext.request.contextPath}/admin/memberList"
+						   style="text-decoration: none; color: #2980b9; font-weight: bold;">👤 회원관리</a>
+		            </c:if>
+		            
+		            <a href="/logout" style="text-decoration: none; color: #333; margin-left: 10px;">로그아웃</a>
+		        </c:otherwise>
+		    </c:choose>
 		</nav>
 
 	</div>
