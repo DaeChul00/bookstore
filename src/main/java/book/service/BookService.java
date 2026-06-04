@@ -42,5 +42,13 @@ public class BookService {
 	public List<BookVO> getNewBooks(){
 	    return dao.findNewBooks();
 	}
+	
+	public List<BookVO> getBooksWithPaging(String category, String keyword, int pagePerCount, int requestPage) {
+	    return dao.findWithPaging(category, keyword, pagePerCount, requestPage);
+	}
+
+	public int getTotalCount(String category, String keyword) {
+	    return dao.getTotalCount(category, keyword);
+	}
 
 }

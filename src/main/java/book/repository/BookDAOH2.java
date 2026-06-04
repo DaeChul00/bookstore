@@ -235,4 +235,69 @@ public class BookDAOH2 implements BookDAO{
 	    return list;
 	}
 	
+	// 1. 페이징 및 검색이 적용된 데이터 조회
+	@Override
+	public List<BookVO> findWithPaging(String category, String keyword, int pagePerCount, int requestPage) {
+	    List<BookVO> list = new ArrayList<>();
+	    
+	    if (!"title".equals(category) && !"author".equals(category) && !"publisher".equals(category)) {
+	        category = "title";
+	    }
+
+	    StringBuilder sql = new StringBuilder("SELECT * FROM BOOK");
+	    if (keyword != null && !keyword.trim().isEmpty()) {
+	        sql.append(" WHERE ").append(category).append(" LIKE ?");
+	    }
+	    // H2/MySQL 페이징 처리: LIMIT 개수 OFFSET 시작위치
+	    sql.append(" ORDER BY ID DESC LIMIT ? OFFSET ?");
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+	        int paramIdx = 1;
+	        if (keyword != null && !keyword.trim().isEmpty()) {
+	            ps.setString(paramIdx++, "%" + keyword + "%");
+	        }
+	        
+	        // LIMIT = 한 페이지에 보여줄 개수
+	        ps.setInt(paramIdx++, pagePerCount);
+	        // OFFSET = (요청페이지 - 1) * 한 페이지에 보여줄 개수
+	        ps.setInt(paramIdx, (requestPage - 1) * pagePerCount);
+
+	        try (ResultSet rs = ps.executeQuery()) {
+	            while (rs.next()) {
+	                list.add(resultSetToBook(rs));
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
+
+	// 2. 검색 조건에 맞는 전체 게시글 수 조회
+	@Override
+	public int getTotalCount(String category, String keyword) {
+	    if (!"title".equals(category) && !"author".equals(category) && !"publisher".equals(category)) {
+	        category = "title";
+	    }
+
+	    StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM BOOK");
+	    if (keyword != null && !keyword.trim().isEmpty()) {
+	        sql.append(" WHERE ").append(category).append(" LIKE ?");
+	    }
+
+	    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+	        if (keyword != null && !keyword.trim().isEmpty()) {
+	            ps.setString(1, "%" + keyword + "%");
+	        }
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                return rs.getInt(1);
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return 0;
+	}
+	
 }

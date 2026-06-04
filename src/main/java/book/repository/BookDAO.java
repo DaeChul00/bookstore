@@ -13,4 +13,6 @@ public interface BookDAO {
 	public List<BookVO> findAll(String category, String keyword);
 	public List<BookVO> findTopRatedBooks();
 	public List<BookVO> findNewBooks();
+	public List<BookVO> findWithPaging(String category, String keyword, int pagePerCount, int requestPage);
+	public int getTotalCount(String category, String keyword);
 }
