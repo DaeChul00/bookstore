@@ -1,143 +1,158 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-	pageEncoding="UTF-8"%>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>도서 등록</title>
-
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <style>
-
-body{
-    background:#f5f6fa;
-    font-family:'Segoe UI', Arial;
+.insert-container {
+    width: 700px;
+    margin: 50px auto;
 }
 
-.container{
-    width:520px;
-    margin:60px auto;
-    background:white;
-    padding:35px;
-    border-radius:12px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+/* 카드 */
+.insert-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
 }
 
-h2{
-    text-align:center;
-    margin-bottom:25px;
-    color:#333;
+/* 제목 */
+.insert-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #2c3e50;
 }
 
-label{
-    font-weight:600;
-    margin-top:14px;
-    display:block;
-    color:#444;
+/* 그룹 */
+.form-group {
+    margin-bottom: 18px;
 }
 
-input, textarea{
-    width:100%;
-    padding:10px;
-    margin-top:6px;
-    border:1px solid #ddd;
-    border-radius:6px;
-    font-size:14px;
-    transition:0.2s;
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 14px;
 }
 
-input:focus, textarea:focus{
-    border-color:#4CAF50;
-    outline:none;
-    box-shadow:0 0 4px rgba(76,175,80,0.4);
+/* 입력 */
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    transition: 0.2s;
 }
 
-textarea{
-    resize:vertical;
-    height:120px;
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #2c3e50;
+    outline: none;
 }
 
-.btn-group{
-    margin-top:25px;
-    text-align:center;
+/* textarea */
+textarea {
+    resize: none;
+    height: 120px;
 }
 
-button{
-    padding:10px 22px;
-    border:none;
-    border-radius:6px;
-    font-size:15px;
-    cursor:pointer;
-    transition:0.2s;
+/* 버튼 영역 */
+.btn-area {
+    text-align: right;
+    margin-top: 25px;
 }
 
-.submit-btn{
-    background:#4CAF50;
-    color:white;
+/* 버튼 */
+.btn {
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
 }
 
-.submit-btn:hover{
-    background:#43a047;
+/* 등록 버튼 */
+.btn-submit {
+    background: #2c3e50;
+    color: #fff;
 }
 
-.reset-btn{
-    background:#e0e0e0;
+.btn-submit:hover {
+    background: #1a252f;
 }
 
-.reset-btn:hover{
-    background:#cfcfcf;
+/* 취소 */
+.btn-cancel {
+    background: #aaa;
+    color: #fff;
+    margin-left: 10px;
 }
 
+.btn-cancel:hover {
+    background: #888;
+}
 </style>
-</head>
 
-<body>
+<div class="insert-container">
+    <div class="insert-card">
 
-<div class="container">
+        <div class="insert-title">📚 도서 등록</div>
 
-<h2>📚 도서 등록</h2>
+        <form action="${pageContext.request.contextPath}/book/insert" method="post">
 
-<form action="${pageContext.request.contextPath}/book/insert" method="post">
-      
-<label>ISBN</label>
-<input type="text" name="isbn" placeholder="ISBN 번호 입력">
+            <div class="form-group">
+                <label>ISBN</label>
+                <input type="text" name="isbn">
+            </div>
 
-<label>도서 이미지 URL</label>
-<input type="url" name="bookimage" placeholder="https://example.com/book.jpg">
+            <div class="form-group">
+                <label>도서 이미지 URL</label>
+                <input type="url" name="bookimage" placeholder="https://example.com/book.jpg">
+            </div>
 
-<label>제목</label>
-<input type="text" name="title" placeholder="책 제목 입력" required>
+            <div class="form-group">
+                <label>제목</label>
+                <input type="text" name="title" required>
+            </div>
 
-<label>저자</label>
-<input type="text" name="author" placeholder="저자 이름 입력" required>
+            <div class="form-group">
+                <label>저자</label>
+                <input type="text" name="author" required>
+            </div>
 
-<label>출판사</label>
-<input type="text" name="publisher" placeholder="출판사 입력">
+            <div class="form-group">
+                <label>출판사</label>
+                <input type="text" name="publisher">
+            </div>
 
-<label>출판일</label>
-<input type="date" name="publictiondate"> <!-- 🔥 여기 수정 -->
+            <div class="form-group">
+                <label>출판일</label>
+                <input type="date" name="publictiondate">
+            </div>
 
-<label>가격</label>
-<input type="number" name="price" placeholder="가격 입력" min="0" required>
+            <div class="form-group">
+                <label>가격</label>
+                <input type="number" name="price" required>
+            </div>
 
-<label>내용</label>
-<textarea name="content" placeholder="도서 설명 입력"></textarea>
+            <div class="form-group">
+                <label>평점</label>
+                <input type="number" step="0.1" name="rating" min="0" max="10">
+            </div>
 
-<label>평점</label>
-<input type="number" name="rating" step="0.1" min="0" max="10">
+            <div class="form-group">
+                <label>내용</label>
+                <textarea name="content"></textarea>
+            </div>
 
-<div class="btn-group">
-<button type="submit" class="submit-btn">
-도서 등록
-</button>
-			
-<button type="reset" class="reset-btn">초기화</button>
+            <div class="btn-area">
+                <button type="submit" class="btn btn-submit">등록</button>
+                <a href="${pageContext.request.contextPath}/book/list" class="btn btn-cancel">취소</a>
+            </div>
 
-<button type="button" onclick="history.back()">목록으로 돌아가기</button> <!-- 🔥 수정 -->
+        </form>
+    </div>
 </div>
-
-</form>
-
-</div>
-
-</body>
 </html>
