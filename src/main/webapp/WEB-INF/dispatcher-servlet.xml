@@ -7,30 +7,7 @@
         http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
-    <context:component-scan base-package="book.controller, member.controller, member.admin.controller, order.controller, cs.controller, admin.controller, intercepter, security" />
-
-    <mvc:interceptors>
-        <mvc:interceptor>
-            <mvc:mapping path="/book/insertform"/>
-            <mvc:mapping path="/book/updateform"/>
-            <mvc:mapping path="/book/delete"/>
-            <mvc:mapping path="/admin/**"/>
-            <mvc:mapping path="/member/update"/>
-            <mvc:mapping path="/order/**"/> 
-            <mvc:exclude-mapping path="/order/cart"/>
-            <mvc:exclude-mapping path="/order/updateCartAsync"/>
-            
-            <bean class="member.interceptor.LoginInterceptor" />
-        </mvc:interceptor>
-
-        <mvc:interceptor>
-            <mvc:mapping path="/book/insertform"/>
-            <mvc:mapping path="/book/updateform"/>
-            <mvc:mapping path="/book/delete"/>
-            <mvc:mapping path="/admin/**"/>
-            <bean class="member.interceptor.AdminInterceptor" />
-        </mvc:interceptor>
-    </mvc:interceptors>
+    <context:component-scan base-package="book.controller, member.controller, member.admin.controller, order.controller, cs.controller, admin.controller, intercepter" />
 
     <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="prefix" value="/WEB-INF/views/"></property>
@@ -55,8 +32,7 @@
         <property name="maxUploadSize" value="10485760"></property>
     </bean>
     
-    
     <mvc:resources mapping="/css/**" location="/css/" />
-	<mvc:annotation-driven/>
+    <mvc:annotation-driven/>
 
 </beans>

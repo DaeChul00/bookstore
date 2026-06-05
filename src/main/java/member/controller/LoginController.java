@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import order.service.CartService; // 장바구니 서비스 임포트 추가
@@ -23,11 +24,11 @@ public class LoginController {
 	private CartService cartService;
 
 	// 1. 로그인 화면 폼 (GET)
-	@GetMapping("/login")
-	public String loginForm(Model model) {
-		model.addAttribute("contentPage", "/WEB-INF/views/member/login.jsp");
-		return "layout/layout";
-	}
+	@RequestMapping(value = "/login", method = RequestMethod.GET)
+    public String loginForm(Model model) {
+        model.addAttribute("contentPage", "/WEB-INF/views/member/login.jsp");
+        return "layout/layout";
+    }
 
 	// 2. 로그아웃 처리 (GET)
 	@GetMapping("/logout")

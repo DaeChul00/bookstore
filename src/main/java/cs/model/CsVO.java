@@ -16,7 +16,7 @@ import lombok.ToString;
 @ToString
 @Builder
 public class CsVO {
-	private int id; //id´Â ÀÚµ¿ Áõ°¡
+	private int id;
 	private String userName;
 	private String title;
 	private String  content;

@@ -1,8 +1,14 @@
 package book.controller;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Collections;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,9 +29,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import member.model.MemberVO;
+import order.model.CartVO;
+import order.service.CartService;
 
 @Controller
 public class KakaoLoginController {
+
+    @Autowired
+    private CartService cartService; 
 
     private static final String CLIENT_ID = "6d56b80b09849d754df794b8ae017307";
     private static final String CLIENT_SECRET = "k16pKYIwdh9UfS551SqEYYYKhcefmleW";
@@ -41,7 +52,10 @@ public class KakaoLoginController {
     }
 
     @GetMapping("/kakao/callback")
-    public String callback(@RequestParam("code") String code, HttpSession session) {
+    public String callback(@RequestParam("code") String code, 
+                           HttpServletRequest request, 
+                           HttpServletResponse response, 
+                           HttpSession session) {
         try {
             RestTemplate rt = new RestTemplate();
 
@@ -71,7 +85,7 @@ public class KakaoLoginController {
             JsonNode userNode = mapper.readTree(userResponse.getBody());
             Long kakaoId = userNode.get("id").asLong();
             String nickname = userNode.get("properties").get("nickname").asText();
-            String username = "kakao_" + kakaoId;
+            String username = "kakao_" + kakaoId; 
 
             // 3. 세션 및 Spring Security 인증 객체 생성
             MemberVO loginUser = new MemberVO();
@@ -80,13 +94,70 @@ public class KakaoLoginController {
             loginUser.setRole("USER");
             session.setAttribute("loginUser", loginUser);
 
-            // [핵심] Spring Security 컨텍스트에 강제 인증 주입
-            // 이 처리가 있어야 <sec:authentication> 태그가 로그인 상태를 인식합니다.
+            // Spring Security 컨텍스트에 강제 인증 주입
             User principal = new User(username, "", Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
-
-            return "redirect:/book";
+            
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("guestCart".equals(cookie.getName())) {
+                        try {
+                            String cartJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
+                            System.out.println("▶ [카카오 수신 쿠키]: " + cartJson);
+                            
+                            // 정규식 대신 가장 직관적이고 에러 없는 중괄호 분할 기법으로 선회
+                            // 예: [{"bookId":4,"count":1}] -> "bookId":4,"count":1
+                            String cleanJson = cartJson.replace("[", "").replace("]", "");
+                            
+                            // 한 장씩 분리하기 위해 "},{" 텍스트를 기준으로 강제 분할
+                            String[] items = cleanJson.split("\\},\\s*\\{");
+                            
+                            for (String item : items) {
+                                // 찌꺼기 괄호 청소
+                                String refinedItem = item.replace("{", "").replace("}", "");
+                                System.out.println("▶ [안전 분해 조각]: " + refinedItem);
+                                
+                                String[] subParts = refinedItem.split(",");
+                                int bookId = 0;
+                                int count = 0;
+                                
+                                for(String part : subParts) {
+                                    if(part.contains("bookId")) {
+                                        bookId = Integer.parseInt(part.replaceAll("[^0-9]", "").trim());
+                                    } else if(part.contains("count")) {
+                                        count = Integer.parseInt(part.replaceAll("[^0-9]", "").trim());
+                                    }
+                                }
+                                
+                                if (bookId > 0 && count > 0) {
+                                    CartVO cartVO = CartVO.builder()
+                                                          .memberId(username) 
+                                                          .bookId(bookId)
+                                                          .count(count)
+                                                          .build();
+                                    
+                                    boolean insertOk = cartService.addCart(cartVO); 
+                                    System.out.println("▶ [DB 연동 결과]: " + (insertOk ? "성공" : "실패"));
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.out.println("❌ 카카오 쿠키 파싱 안전 레이어 예외 터짐: " + e.getMessage());
+                            e.printStackTrace();
+                        }
+                        
+                        // DB 연동 시도가 끝났으므로 브라우저 쿠키 소멸 명령
+                        cookie.setValue("");
+                        cookie.setPath("/");
+                        cookie.setMaxAge(0);
+                        response.addCookie(cookie);
+                        System.out.println("guestCart 쿠키 브라우저 삭제 명령");
+                    }
+                }
+            }
+           
+            return "redirect:/order/cart";
 
         } catch (Exception e) {
             e.printStackTrace();

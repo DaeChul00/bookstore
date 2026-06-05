@@ -29,11 +29,9 @@ public class CsDAOH2 implements CsDAO {
                 CsVO vo = new CsVO();
                 vo.setId(rs.getInt("id"));
                 vo.setTitle(rs.getString("title"));
-                
-                // 💡 [정밀 타격] vo.setWriter 대신 대철이의 userName 필드로 일치화!
+
                 vo.setUserName(rs.getString("writer")); 
-                
-                // 💡 [정밀 타격] vo.setRegdate 대신 대철이의 createdAt (Timestamp) 규격으로 완벽하게 싱크 완료!
+
                 vo.setCreatedAt(rs.getTimestamp("regdate")); 
                 
                 list.add(vo);
@@ -53,8 +51,6 @@ public class CsDAOH2 implements CsDAO {
             ps.setString(1, cv.getCategory()); 
             ps.setString(2, cv.getTitle());
             ps.setString(3, cv.getContent());
-            
-            // 💡 [정밀 타격] cv.getWriter() 대신 대철이 원본의 cv.getUserName()으로 완벽하게 저격 매핑!
             ps.setString(4, cv.getUserName()); 
             
             return ps.executeUpdate();
@@ -76,8 +72,6 @@ public class CsDAOH2 implements CsDAO {
                     vo.setId(rs.getInt("id"));
                     vo.setTitle(rs.getString("title"));
                     vo.setContent(rs.getString("content"));
-                    
-                    // 💡 [정밀 타격] 상단과 동일하게 대철이의 userName과 createdAt(Timestamp) 구조로 전면 개정!
                     vo.setUserName(rs.getString("writer"));
                     vo.setCreatedAt(rs.getTimestamp("regdate"));
                     

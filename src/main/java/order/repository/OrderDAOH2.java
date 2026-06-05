@@ -15,13 +15,11 @@ import order.model.OrderVO;
 @Repository
 public class OrderDAOH2 {
 
-    // 💡 근본적 해결: 락 에러와 주입 실패를 유발하던 @Autowired private Connection conn; 을 제거하고 DataSource를 주입받습니다!
     @Autowired
     private DataSource dataSource;
 
     public int insertOrder(OrderVO order) {
         String sql = "INSERT INTO ORDERS (MEMBER_ID, BOOK_ID, TITLE, COUNT, ORDER_PRICE, BOOKIMAGE) VALUES (?, ?, ?, ?, ?, ?)";
-        // try-with-resources 구문으로 커넥션을 매번 안전하게 열고 자동으로 닫아줍니다. (TCP 모드 필수 규격)
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             

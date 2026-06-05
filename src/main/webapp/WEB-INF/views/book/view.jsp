@@ -39,7 +39,7 @@
                 </sec:authorize>
 
                 <sec:authorize access="isAnonymous() or hasRole('USER')">
-                    <button class="btn btn-warning" onclick="submitCartForm()">🛒 장바구니</button>
+                    <button class="btn btn-warning" onclick="handleCart(${bk.id})">🛒 장바구니</button>
                     <button class="btn btn-secondary" onclick="location.href='${pageContext.request.contextPath}/book/list'">목록</button>
                 </sec:authorize>
             </div>
@@ -54,18 +54,59 @@
 </form>
 
 <script>
-function submitCartForm() {
-    var isAnonymous = true;
-    <sec:authorize access="isAuthenticated()">
-        isAnonymous = false;
-    </sec:authorize>
+// 💡 실시간 로그인 판별 플래그 배치
+var isLogin = false;
+<sec:authorize access="isAuthenticated()">
+    isLogin = true;
+</sec:authorize>
 
-    if (isAnonymous) {
-        alert("로그인이 필요합니다.");
-        location.href = "${pageContext.request.contextPath}/login";
-        return;
+function handleCart(bookId) {
+    if (isLogin) {
+        // 1. [회원 파트] 시큐리티 인증 토큰이 실린 히든 POST 폼 서브밋 실행
+        document.getElementById("hiddenCartForm").submit();
+    } else {
+        // 2. [비회원 파트] 대철이가 설계한 순수 브라우저 쿠키 적재 모듈 실행
+        addGuestCartToCookie(bookId, 1);
     }
-    // 히든 POST 폼 구동 제출!
-    document.getElementById("hiddenCartForm").submit();
+}
+
+// 쿠키 핸들러 함수 유틸리티
+function getCookie(name) {
+    var value = "; " + document.cookie;
+    var parts = value.split("; " + name + "=");
+    if (parts.length == 2) return parts.pop().split(";").shift();
+    return "";
+}
+
+function addGuestCartToCookie(bookId, count) {
+    var cartCookie = getCookie("guestCart");
+    var cartList = [];
+    
+    if (cartCookie) {
+        // 기존 쿠키가 있다면 JSON 파싱
+        cartList = JSON.parse(decodeURIComponent(cartCookie));
+    }
+    
+    // 이미 바구니에 같은 책이 있는지 검사
+    var isExist = false;
+    for (var i = 0; i < cartList.length; i++) {
+        if (cartList[i].bookId === bookId) {
+            cartList[i].count += count;
+            isExist = true;
+            break;
+        }
+    }
+    
+    // 새 상품이면 푸시
+    if (!isExist) {
+        cartList.push({ "bookId": bookId, "count": count });
+    }
+    
+    // 💡 쿠키 유효기간 30일 설정 및 인코딩하여 저장
+    document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
+    
+    if (confirm("장바구니에 상품이 담겼습니다.\n장바구니 페이지로 이동하시겠습니까?")) {
+        location.href = "${pageContext.request.contextPath}/order/cart";
+    }
 }
 </script>

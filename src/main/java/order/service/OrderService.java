@@ -14,7 +14,6 @@ public class OrderService {
 	@Autowired
 	private OrderDAOH2 orderDao;
 
-	// 💡 핵심 수정: 부팅을 가로막던 CartDAO 인터페이스 타입을 실제 구현체인 CartDAOH2 클래스로 정정합니다!
 	@Autowired
 	private CartDAOH2 cartDao;
 

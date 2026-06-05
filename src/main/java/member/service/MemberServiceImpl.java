@@ -14,20 +14,19 @@ import org.springframework.stereotype.Service;
 import member.model.MemberVO;
 import member.repository.MemberDAO;
 
-@Service // 이 클래스가 비즈니스 로직을 수행하는 서비스 객체임을 Spring 관제탑에 알림
+@Service
 public class MemberServiceImpl implements MemberService {
 	
 	@Autowired
 	@Qualifier("memberDAOH2")
 	private MemberDAO memberDAO; 
 
-	// 💡 시큐리티 인증용 비밀번호 암호화 컴포넌트 주입
+	// 시큐리티 인증용 비밀번호 암호화 컴포넌트 주입
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
 
 	@Override
 	public MemberVO login(String id, String pw) {
-		// 단순 호출용이며, 실제 로그인 주도권은 아래 loadUserByUsername과 시큐리티 관제탑이 가져갑니다.
 		return memberDAO.login(id, pw);
 	}
 
@@ -41,9 +40,7 @@ public class MemberServiceImpl implements MemberService {
 			throw new RuntimeException("이미 존재하는 아이디입니다.");
 		}
 
-		// 2. 💡 핵심: 보안을 위해 사용자의 비밀번호를 BCrypt로 암호화하여 세팅합니다!
 		vo.setPassword(passwordEncoder.encode(vo.getPassword()));
-
 		// 3. 기본 권한 등급을 USER로 고정합니다.
 		vo.setRole("USER");
 

@@ -36,7 +36,6 @@ public class CartDAOH2 {
 
     public List<CartVO> findCartByMemberId(String memberId) {
         List<CartVO> list = new ArrayList<>();
-        // 💡 대철이의 CART 테이블과 BOOK 테이블을 복합 조인해서 화면 표기용 가방을 두둑하게 채웁니다!
         String sql = "SELECT C.CART_ID, C.MEMBER_ID, C.BOOK_ID, C.COUNT, "
                    + "B.TITLE, B.PRICE, B.BOOKIMAGE "
                    + "FROM CART C "
