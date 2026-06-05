@@ -1,56 +1,71 @@
 package order.repository;
 
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.sql.DataSource; // DataSource 사용을 위해 추가
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import order.model.OrderVO;
 
 @Repository
 public class OrderDAOH2 {
-    @Autowired
-    Connection conn;
 
-    // 주문 저장 (장바구니 데이터를 한 줄씩 구매 기록으로 저장)
+    // 💡 근본적 해결: 락 에러와 주입 실패를 유발하던 @Autowired private Connection conn; 을 제거하고 DataSource를 주입받습니다!
+    @Autowired
+    private DataSource dataSource;
+
     public int insertOrder(OrderVO order) {
-        String sql = "INSERT INTO ORDERS (member_id, book_id, title, count, order_price, bookimage) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "INSERT INTO ORDERS (MEMBER_ID, BOOK_ID, TITLE, COUNT, ORDER_PRICE, BOOKIMAGE) VALUES (?, ?, ?, ?, ?, ?)";
+        // try-with-resources 구문으로 커넥션을 매번 안전하게 열고 자동으로 닫아줍니다. (TCP 모드 필수 규격)
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
             ps.setString(1, order.getMemberId());
             ps.setInt(2, order.getBookId());
             ps.setString(3, order.getTitle());
             ps.setInt(4, order.getCount());
-            ps.setInt(5, order.getOrderPrice()); // 구매 당시 가격 저장
+            ps.setInt(5, order.getOrderPrice());
             ps.setString(6, order.getBookimage());
+            
             return ps.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); return 0; }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
-    // 주문 내역 조회 (order-list.jsp에서 사용)
     public List<OrderVO> findOrdersByMemberId(String memberId) {
         List<OrderVO> list = new ArrayList<>();
-        String sql = "SELECT * FROM ORDERS WHERE member_id = ? ORDER BY order_id DESC";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "SELECT * FROM ORDERS WHERE MEMBER_ID = ? ORDER BY ORDER_ID DESC";
+        
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
             ps.setString(1, memberId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(OrderVO.builder()
-                    .orderId(rs.getInt("order_id"))
-                    .title(rs.getString("title"))
-                    .count(rs.getInt("count"))
-                    .orderPrice(rs.getInt("order_price"))
-                    .bookimage(rs.getString("bookimage"))
-                    .orderDate(rs.getString("order_date"))
-                    .build());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    OrderVO order = OrderVO.builder()
+                            .orderId(rs.getInt("ORDER_ID"))
+                            .memberId(rs.getString("MEMBER_ID"))
+                            .bookId(rs.getInt("BOOK_ID"))
+                            .title(rs.getString("TITLE"))
+                            .count(rs.getInt("COUNT"))
+                            .orderPrice(rs.getInt("ORDER_PRICE"))
+                            .bookimage(rs.getString("BOOKIMAGE"))
+                            // Timestamp -> String 규격 변환부 안전성 유지
+                            .orderDate(rs.getTimestamp("ORDER_DATE") != null ? rs.getTimestamp("ORDER_DATE").toString() : null)
+                            .build();
+                    list.add(order);
+                }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return list;
     }
 }

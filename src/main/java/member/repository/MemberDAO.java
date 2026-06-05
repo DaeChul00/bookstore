@@ -14,4 +14,5 @@ public interface MemberDAO {
 	List<MemberVO> findAll(String sort);
 	void updateRole(String memberId, String role);
 	MemberVO findById(String memberId);
+	MemberVO selectById(String memberId);
 }

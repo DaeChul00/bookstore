@@ -3,54 +3,96 @@ package member.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import member.model.MemberVO;
 import member.repository.MemberDAO;
 
-@Service // ÀÌ Å¬·¡½º°¡ ºñÁî´Ï½º ·ÎÁ÷À» ¼öÇàÇÏ´Â ¼­ºñ½ºÀÓÀ» Spring¿¡ ¾Ë¸²
+@Service // ì´ í´ë˜ìŠ¤ê°€ ë¹„ì¦ˆë‹ˆìŠ¤ ë¡œì§ì„ ìˆ˜í–‰í•˜ëŠ” ì„œë¹„ìŠ¤ ê°ì²´ì„ì„ Spring ê´€ì œíƒ‘ì— ì•Œë¦¼
 public class MemberServiceImpl implements MemberService {
-    
-    @Autowired
-    private MemberDAO memberDAO; // ½ÇÁ¦ DB ÀÛ¾÷À» ÇÒ DAO¸¦ È£ÃâÇÔ
+	
+	@Autowired
+	@Qualifier("memberDAOH2")
+	private MemberDAO memberDAO; 
 
-    @Override
-    public MemberVO login(String id, String pw) {
-        // ´Ü¼ø È£ÃâÀÌÁö¸¸, ³ªÁß¿¡ ·Î±×ÀÎ ½ÇÆĞ È½¼ö Ã¼Å© µîÀÇ ·ÎÁ÷ÀÌ Ãß°¡µÉ ¼ö ÀÖÀ½
-        return memberDAO.login(id, pw);
-    }
+	// ğŸ’¡ ì‹œíë¦¬í‹° ì¸ì¦ìš© ë¹„ë°€ë²ˆí˜¸ ì•”í˜¸í™” ì»´í¬ë„ŒíŠ¸ ì£¼ì…
+	@Autowired
+	private BCryptPasswordEncoder passwordEncoder;
 
-    @Override
-    public void signup(MemberVO vo) {
-        // 1. ¾ÆÀÌµğ·Î ±âÁ¸ È¸¿øÀÌ ÀÖ´ÂÁö Á¶È¸ (findById µî ±âÁ¸ ¸Ş¼­µå È°¿ë)
-        MemberVO existing = memberDAO.findById(vo.getMemberId());
-        
-        if (existing != null) {
-            // ÀÌ¹Ì ¾ÆÀÌµğ°¡ Á¸ÀçÇÑ´Ù¸é ¿¹¿Ü¸¦ ´øÁö°Å³ª Ã³¸®¸¦ Áß´ÜÇØ¾ß ÇÔ
-            throw new RuntimeException("ÀÌ¹Ì Á¸ÀçÇÏ´Â ¾ÆÀÌµğÀÔ´Ï´Ù.");
-        }
-        
-        // 2. Á¸ÀçÇÏÁö ¾ÊÀ» ¶§¸¸ °¡ÀÔ ÁøÇà
-        memberDAO.signup(vo);
-    }
-    
-    @Override
+	@Override
+	public MemberVO login(String id, String pw) {
+		// ë‹¨ìˆœ í˜¸ì¶œìš©ì´ë©°, ì‹¤ì œ ë¡œê·¸ì¸ ì£¼ë„ê¶Œì€ ì•„ë˜ loadUserByUsernameê³¼ ì‹œíë¦¬í‹° ê´€ì œíƒ‘ì´ ê°€ì ¸ê°‘ë‹ˆë‹¤.
+		return memberDAO.login(id, pw);
+	}
+
+	@Override
+	public void signup(MemberVO vo) {
+		// 1. ì…ë ¥ë°›ì€ ì•„ì´ë””ë¡œ ê¸°ì¡´ íšŒì›ì´ ì¡´ì¬í•˜ëŠ”ì§€ ê²€ì¦
+		MemberVO existing = memberDAO.findById(vo.getMemberId());
+
+		if (existing != null) {
+			// ê¹¨ì§„ í•œê¸€ êµ¬ë¬¸ì„ ê¹”ë”í•˜ê²Œ ì •ë¦¬ ì™„ë£Œ
+			throw new RuntimeException("ì´ë¯¸ ì¡´ì¬í•˜ëŠ” ì•„ì´ë””ì…ë‹ˆë‹¤.");
+		}
+
+		// 2. ğŸ’¡ í•µì‹¬: ë³´ì•ˆì„ ìœ„í•´ ì‚¬ìš©ìì˜ ë¹„ë°€ë²ˆí˜¸ë¥¼ BCryptë¡œ ì•”í˜¸í™”í•˜ì—¬ ì„¸íŒ…í•©ë‹ˆë‹¤!
+		vo.setPassword(passwordEncoder.encode(vo.getPassword()));
+
+		// 3. ê¸°ë³¸ ê¶Œí•œ ë“±ê¸‰ì„ USERë¡œ ê³ ì •í•©ë‹ˆë‹¤.
+		vo.setRole("USER");
+
+		// 4. ì•ˆì „í•˜ê²Œ ì•”í˜¸í™”ëœ ìƒíƒœë¡œ DBì— ì‚½ì… ì²˜ë¦¬í•©ë‹ˆë‹¤.
+		memberDAO.signup(vo);
+	}
+	
+	@Override
 	public void updateMember(MemberVO vo) {
 		memberDAO.updateMember(vo);
 	}
-    
-    @Override
-    public void withdraw(String memberId) {
-        memberDAO.deleteMember(memberId);
-    }
+	
+	@Override
+	public void withdraw(String memberId) {
+		memberDAO.deleteMember(memberId);
+	}
 
-    @Override
-    public List<MemberVO> getAllMembers(String sort) {
-        return memberDAO.findAll(sort);
-    }
+	@Override
+	public List<MemberVO> getAllMembers(String sort) {
+		return memberDAO.findAll(sort);
+	}
 	
 	@Override
 	public void changeRole(String memberId, String role) {
-	    memberDAO.updateRole(memberId, role);
+		memberDAO.updateRole(memberId, role);
 	}
+	
+	/**
+	 * ğŸ’¡ [ìŠ¤í”„ë§ ì‹œíë¦¬í‹° ë¡œê·¸ì¸ ì—°ë™ í•µì‹¬ ë©”ì„œë“œ]
+	 * ì‚¬ìš©ìê°€ ë¡œê·¸ì¸ì„ ì‹œë„í•˜ë©´ ì‹œíë¦¬í‹° ê´€ì œíƒ‘ì´ ì´ ë©”ì„œë“œë¥¼ í˜¸ì¶œí•˜ì—¬ 
+	 * DBì˜ ì•”í˜¸í™”ëœ ì •ë³´ì™€ ì‚¬ìš©ìê°€ ì…ë ¥í•œ ë¹„ë°€ë²ˆí˜¸ë¥¼ ìë™ìœ¼ë¡œ ëŒ€ì¡° ë° ì¸ì¦í•´ ì¤ë‹ˆë‹¤.
+	 */
+	@Override
+	public UserDetails loadUserByUsername(String memberId) throws UsernameNotFoundException {
 
+		System.out.println("Spring Security ë¡œê·¸ì¸ ì¸ì¦ ì‹œë„ ID : " + memberId);
+
+		// DBì—ì„œ íšŒì› ì •ë³´ ì¡°íšŒ
+		MemberVO member = memberDAO.findById(memberId);
+
+		if (member == null) {
+			throw new UsernameNotFoundException("ì‚¬ìš©ìë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+		}
+
+		// ì‹œíë¦¬í‹° ê·œê²©ì— ë§ëŠ” User ê°ì²´ë¥¼ ìƒì„±í•˜ì—¬ ê¶Œí•œ(ROLE_USER ë“±)ê³¼ í•¨ê»˜ ë°˜í™˜í•©ë‹ˆë‹¤.
+		return User.builder()
+				.username(member.getMemberId())
+				.password(member.getPassword()) // DBì— ì €ì¥ëœ ì•”í˜¸í™”ëœ ë¹„ë°€ë²ˆí˜¸
+				.authorities(new SimpleGrantedAuthority("ROLE_" + member.getRole()))
+				.build();
+	}
 }

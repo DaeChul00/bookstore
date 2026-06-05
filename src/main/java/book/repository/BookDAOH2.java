@@ -7,51 +7,56 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import book.model.BookVO;
 
 @Repository
-public class BookDAOH2 implements BookDAO{
-	@Autowired
-	Connection conn;
-	
-	@Override
-	public int insert(BookVO book) {
-		String sql="INSERT INTO BOOK (isbn, title, author, publisher, publictiondate, price, content, bookimage, rating) "
-	            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-	      try {
-	         PreparedStatement ps = conn.prepareStatement(sql);
-	           ps.setString(1, book.getIsbn());
-	           ps.setString(2, book.getTitle());
-	           ps.setString(3, book.getAuthor());
-	           ps.setString(4, book.getPublisher());
-	           ps.setString(5, book.getPublictiondate());
-	           ps.setInt(6, book.getPrice());
-	           ps.setString(7, book.getContent());
-	           ps.setString(8, book.getBookimage());
-	           ps.setFloat(9, book.getRating());
-	         
-	         int result=ps.executeUpdate();
-	         ps.close();
-	         return result;
-	      } catch (SQLException e) {
-	         e.printStackTrace();
-	         return 0;
-	      }   
-	}
+public class BookDAOH2 implements BookDAO {
+    
+    @Autowired
+    private DataSource dataSource;
 
-	@Override
-	public List<BookVO> findAll() {
-		List<BookVO> list = new ArrayList<>();
+    @Override
+    public int insert(BookVO book) {
+        String sql = "INSERT INTO BOOK (isbn, title, author, publisher, publictiondate, price, content, bookimage, rating) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = dataSource.getConnection(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            ps.setString(1, book.getIsbn());
+            ps.setString(2, book.getTitle());
+            ps.setString(3, book.getAuthor());
+            ps.setString(4, book.getPublisher());
+            ps.setString(5, book.getPublictiondate());
+            ps.setInt(6, book.getPrice());
+            ps.setString(7, book.getContent());
+            ps.setString(8, book.getBookimage());
+            ps.setFloat(9, book.getRating());
+            
+            return ps.executeUpdate();
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    @Override
+    public List<BookVO> findAll() {
+        List<BookVO> list = new ArrayList<>();
         String sql = "SELECT * FROM BOOK ORDER BY ID DESC";
 
-        try (PreparedStatement ps = conn.prepareStatement(sql);
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-            	list.add(resultSetToBook(rs));
+                list.add(resultSetToBook(rs));
             }
 
         } catch (SQLException e) {
@@ -59,73 +64,159 @@ public class BookDAOH2 implements BookDAO{
         }
 
         return list;
-	}
+    }
 
-	@Override
-	public BookVO findById(int id) {
-		String sql = "SELECT * FROM BOOK WHERE ID = ?";
-	       
-	       try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	           
-	           ps.setInt(1, id);
-	           ResultSet rs = ps.executeQuery();
-	           
-	           if (rs.next()) {
-	               BookVO book = new BookVO();
+    @Override
+    public BookVO findById(int id) {
+        String sql = "SELECT * FROM BOOK WHERE ID = ?";
+        
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setInt(1, id);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return resultSetToBook(rs);
+                }
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return null;
+    }
 
-	               book.setId(rs.getInt("ID"));
-	               book.setIsbn(rs.getString("ISBN"));
-	               book.setTitle(rs.getString("TITLE"));
-	               book.setAuthor(rs.getString("AUTHOR"));
-	               book.setPublisher(rs.getString("PUBLISHER"));
-	               book.setPublictiondate(rs.getString("PUBLICTIONDATE"));
-	               book.setPrice(rs.getInt("PRICE"));
-	               book.setBookimage(rs.getString("BOOKIMAGE"));
-	               book.setContent(rs.getString("CONTENT"));
-	               book.setRating(rs.getFloat("RATING"));
-	                   
-	               return book;
-	           }
-	           
-	       } catch (Exception e) {
-	           e.printStackTrace();
-	       }
-	       
-	       return null;
-	}
+    @Override
+    public int update(BookVO book) {
+        String sql = "UPDATE BOOK SET " +
+                     "ISBN=?, TITLE=?, AUTHOR=?, PUBLISHER=?, "+
+                     "PUBLICTIONDATE=?, PRICE=?, CONTENT=?, "+
+                     "BOOKIMAGE=?, RATING=? "+
+                     "WHERE ID=?";
+                     
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            ps.setString(1, book.getIsbn());
+            ps.setString(2, book.getTitle());
+            ps.setString(3, book.getAuthor());
+            ps.setString(4, book.getPublisher());
+            ps.setString(5, book.getPublictiondate());
+            ps.setInt(6, book.getPrice());
+            ps.setString(7, book.getContent());
+            ps.setString(8, book.getBookimage());
+            ps.setFloat(9, book.getRating());
+            ps.setInt(10, book.getId());
+            
+            return ps.executeUpdate();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return 0;
+    }
 
-	@Override
-	public int update(BookVO book) {
-		String sql = "UPDATE BOOK SET " +
-	            "ISBN=?, TITLE=?, AUTHOR=?, PUBLISHER=?, "+
-	            "PUBLICTIONDATE=?, PRICE=?, CONTENT=?, "+
-	            "BOOKIMAGE=?, RATING=? "+
-	            "WHERE ID=?";
-		      try(PreparedStatement ps = conn.prepareStatement(sql)) {
-		         ps.setString(1, book.getIsbn());
-		         ps.setString(2, book.getTitle());
-		         ps.setString(3, book.getAuthor());
-		         ps.setString(4, book.getPublisher());
-		         ps.setString(5, book.getPublictiondate());
-		         ps.setInt(6, book.getPrice());
-		         ps.setString(7, book.getContent());
-		         ps.setString(8, book.getBookimage());
-		         ps.setFloat(9, book.getRating());
-		         ps.setInt(10, book.getId());
-		         
-		         return ps.executeUpdate();
-		      } catch (Exception e) {
-		         e.printStackTrace();
-		      }
-		      
-		      return 0;
-	}
-	private BookVO resultSetToBook(ResultSet rs){
+    @Override
+    public int delete(int id) {
+        String sql = "DELETE FROM BOOK WHERE ID = ?";
+        
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+             
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+            
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+    
+    @Override
+    public List<BookVO> findAll(String category, String keyword) {
+        List<BookVO> list = new ArrayList<>();
 
-    	try {
-    		BookVO book = new BookVO();
+        if (!"title".equals(category) &&
+            !"author".equals(category) &&
+            !"publisher".equals(category)) {
+            category = "title";
+        }
 
-    		book.setId(rs.getInt("ID"));
+        StringBuilder sql = new StringBuilder("SELECT * FROM BOOK");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" WHERE ").append(category).append(" LIKE ?");
+        }
+
+        sql.append(" ORDER BY ID DESC");
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                ps.setString(1, "%" + keyword + "%");
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(resultSetToBook(rs));
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<BookVO> findTopRatedBooks() {
+        List<BookVO> list = new ArrayList<>();
+        String sql = "SELECT * FROM BOOK ORDER BY RATING DESC LIMIT 8";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(resultSetToBook(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<BookVO> findNewBooks() {
+        List<BookVO> list = new ArrayList<>();
+        String sql = "SELECT * FROM BOOK ORDER BY ID DESC LIMIT 8";
+
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(resultSetToBook(rs));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    private BookVO resultSetToBook(ResultSet rs) {
+        try {
+            BookVO book = new BookVO();
+            book.setId(rs.getInt("ID"));
             book.setIsbn(rs.getString("ISBN"));
             book.setTitle(rs.getString("TITLE"));
             book.setAuthor(rs.getString("AUTHOR"));
@@ -135,104 +226,10 @@ public class BookDAOH2 implements BookDAO{
             book.setContent(rs.getString("CONTENT"));
             book.setBookimage(rs.getString("BOOKIMAGE"));
             book.setRating(rs.getFloat("RATING"));
-            
-        return book;
-    	}catch (Exception e) {
-    		e.printStackTrace();
-    		return null;
-		}
+            return book;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
-	
-	@Override
-	public int delete(int id) {
-	    String sql = "DELETE FROM BOOK WHERE ID = ?";
-	    try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setInt(1, id);
-	        return ps.executeUpdate();
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        return 0;
-	    }
-	}
-	
-	@Override
-	public List<BookVO> findAll(String category, String keyword) {
-	    List<BookVO> list = new ArrayList<>();
-
-	    //1. category 먼저 검증 (항상 실행)
-	    if (!"title".equals(category) &&
-	        !"author".equals(category) &&
-	        !"publisher".equals(category)) {
-	        category = "title";
-	    }
-
-	    StringBuilder sql = new StringBuilder("SELECT * FROM BOOK");
-
-	    //2. keyword 있을 때만 WHERE 추가
-	    if (keyword != null && !keyword.trim().isEmpty()) {
-	        sql.append(" WHERE ").append(category).append(" LIKE ?");
-	    }
-
-	    sql.append(" ORDER BY ID DESC");
-
-	    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-	        //3. 파라미터 세팅
-	        if (keyword != null && !keyword.trim().isEmpty()) {
-	            ps.setString(1, "%" + keyword + "%");
-	        }
-
-	        try (ResultSet rs = ps.executeQuery()) {
-	            while (rs.next()) {
-	                list.add(resultSetToBook(rs));
-	            }
-	        }
-
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-
-	    return list;
-	}
-
-	@Override
-	public List<BookVO> findTopRatedBooks() {
-	    List<BookVO> list = new ArrayList<>();
-	    String sql = "SELECT * FROM BOOK ORDER BY RATING DESC LIMIT 8";
-
-	    try (PreparedStatement ps = conn.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
-
-	        while (rs.next()) {
-	            list.add(resultSetToBook(rs));
-	        }
-
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-
-	    return list;
-	}
-
-	@Override
-	public List<BookVO> findNewBooks() {
-	    List<BookVO> list = new ArrayList<>();
-	    
-	    // 최신순 (id 기준)
-	    String sql = "SELECT * FROM BOOK ORDER BY ID DESC LIMIT 8";
-
-	    try (PreparedStatement ps = conn.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
-
-	        while (rs.next()) {
-	            list.add(resultSetToBook(rs));
-	        }
-
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-
-	    return list;
-	}
-	
 }

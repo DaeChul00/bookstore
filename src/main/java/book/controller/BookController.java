@@ -25,32 +25,35 @@ public class BookController {
 	@Autowired
 	BookService service;
 	
-	// 1. 메인 페이지 (추천 도서 및 신규 도서 로직 통합)
+	// 1. 메인 페이지 (대철이의 도서 로직 + 민한이의 세션 출력 로직 완벽 통합)
 	@RequestMapping("")
-	public String main(Model model) {
-	    // 서비스에서 평점 높은 도서와 신규 도서 리스트를 가져옵니다.
-	    List<BookVO> topRatedList = service.getTopRatedBooks();
-	    List<BookVO> newBookList = service.getNewBooks();
+	public String main(Model model, HttpSession session) {
+		// 민한이의 로그인 세션 정보 출력 디버깅 코드 반영
+		System.out.println("메인페이지 세션 = " + session.getAttribute("loginUser"));
 
-	    model.addAttribute("topRatedList", topRatedList);
-	    model.addAttribute("newBookList", newBookList);
+		// 서비스에서 평점 높은 도서와 신규 도서 리스트를 가져옵니다.
+		List<BookVO> topRatedList = service.getTopRatedBooks();
+		List<BookVO> newBookList = service.getNewBooks();
 
-	    // 메인 페이지 전용 JSP로 연결합니다.
-	    model.addAttribute("contentPage", "/WEB-INF/views/main.jsp");
-	    return "layout/layout";
+		model.addAttribute("topRatedList", topRatedList);
+		model.addAttribute("newBookList", newBookList);
+
+		// 메인 페이지 전용 JSP로 연결합니다.
+		model.addAttribute("contentPage", "/WEB-INF/views/main.jsp");
+		return "layout/layout";
 	}
 
 	// 2. 도서 등록 폼 (관리자 권한 체크 로직 유지)
 	@RequestMapping(value = "insertform", method = RequestMethod.GET)
 	public String insertform(Model model, HttpSession session) {
-	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
-	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-	        return "redirect:/book/list";
-	    }
+		if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+			return "redirect:/book/list";
+		}
 
-	    model.addAttribute("contentPage", "/WEB-INF/views/book/insertform.jsp");
-	    return "layout/layout";
+		model.addAttribute("contentPage", "/WEB-INF/views/book/insertform.jsp");
+		return "layout/layout";
 	}
 	
 	@RequestMapping(value = "insert", method = RequestMethod.POST)
@@ -67,16 +70,16 @@ public class BookController {
 	// 3. 도서 목록 (카테고리/키워드 검색 기능 유지)
 	@RequestMapping("list")
 	public ModelAndView list(
-	        @RequestParam(value = "category", required = false, defaultValue = "title") String category,
-	        @RequestParam(value = "keyword", required = false) String keyword) {
-	    
-	    ModelAndView mv = new ModelAndView();
-	    List<BookVO> list = service.getBooks(category, keyword);
-	    
-	    mv.addObject("list", list);
-	    mv.addObject("contentPage", "/WEB-INF/views/book/list.jsp");
-	    mv.setViewName("layout/layout");
-	    return mv;
+			@RequestParam(value = "category", required = false, defaultValue = "title") String category,
+			@RequestParam(value = "keyword", required = false) String keyword) {
+		
+		ModelAndView mv = new ModelAndView();
+		List<BookVO> list = service.getBooks(category, keyword);
+		
+		mv.addObject("list", list);
+		mv.addObject("contentPage", "/WEB-INF/views/book/list.jsp");
+		mv.setViewName("layout/layout");
+		return mv;
 	}
 
 	// 4. 상세 보기
@@ -94,12 +97,12 @@ public class BookController {
 	public ModelAndView updateform(int id, HttpSession session) {
 		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
-	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-	        return new ModelAndView("redirect:/book/list");
-	    }
+		if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+			return new ModelAndView("redirect:/book/list");
+		}
 
-	    ModelAndView mv = new ModelAndView();
-	    mv.addObject("bk", service.getBook(id));
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("bk", service.getBook(id));
 		mv.addObject("contentPage", "/WEB-INF/views/book/updateform.jsp");
 		mv.setViewName("layout/layout");
 		return mv;
@@ -118,18 +121,18 @@ public class BookController {
 	
 	@RequestMapping("delete")
 	public String delete(@RequestParam("id") int id, RedirectAttributes ra, HttpSession session) {
-	    MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
 
-	    if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-	        return "redirect:/book/list";
-	    }
+		if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
+			return "redirect:/book/list";
+		}
 
-	    ra.addFlashAttribute("kind", "delete");
-	    if(service.delete(id)) {
-	        ra.addFlashAttribute("message", "success");
-	    } else {
-	        ra.addFlashAttribute("message", "fail");
-	    }
-	    return "redirect:/book/list";
+		ra.addFlashAttribute("kind", "delete");
+		if(service.delete(id)) {
+			ra.addFlashAttribute("message", "success");
+		} else {
+			ra.addFlashAttribute("message", "fail");
+		}
+		return "redirect:/book/list";
 	}
 }

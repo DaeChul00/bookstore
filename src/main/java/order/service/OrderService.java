@@ -1,40 +1,40 @@
 package order.service;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import order.model.CartVO;
 import order.model.OrderVO;
-import order.repository.CartDAO;
+import order.repository.CartDAOH2;  // 💡 인터페이스 대신 실제 클래스 CartDAOH2 임포트
 import order.repository.OrderDAOH2;
 
 @Service
 public class OrderService {
+
 	@Autowired
 	private OrderDAOH2 orderDao;
-	@Autowired
-	private CartDAO cartDao;
 
-	// 주문 처리: 장바구니 데이터를 주문으로 옮기고 비우기
-	@Transactional // 둘 중 하나라도 실패하면 안 되므로 붙여주는 것이 좋습니다.
-	public void processOrder(String memberId, List<CartVO> cartList) {
-		for (CartVO cart : cartList) {
-			OrderVO order = OrderVO.builder()
-					.memberId(memberId)
-					.bookId(cart.getBookId())
-					.title(cart.getTitle())
-					.count(cart.getCount())
-					.orderPrice(cart.getPrice())
-					.bookimage(cart.getBookimage())
-					.build();
-			orderDao.insertOrder(order);
+	// 💡 핵심 수정: 부팅을 가로막던 CartDAO 인터페이스 타입을 실제 구현체인 CartDAOH2 클래스로 정정합니다!
+	@Autowired
+	private CartDAOH2 cartDao;
+
+	// 1. 주문 생성 로직 (장바구니 연동 규격 맞춤 완료)
+	public boolean placeOrder(String memberId, List<OrderVO> orderList) {
+		int resultCount = 0;
+		for (OrderVO order : orderList) {
+			order.setMemberId(memberId);
+			resultCount += orderDao.insertOrder(order);
 		}
-		cartDao.deleteByMemberId(memberId);
+		
+		// 주문이 성공적으로 들어갔다면, 장바구니를 깨끗하게 비워줍니다.
+		if (resultCount == orderList.size()) {
+			cartDao.clearCart(memberId); // 메서드명 싱크 완료
+			return true;
+		}
+		return false;
 	}
 
+	// 2. 회원별 주문 내역 조회
 	public List<OrderVO> getOrderList(String memberId) {
 		return orderDao.findOrdersByMemberId(memberId);
 	}

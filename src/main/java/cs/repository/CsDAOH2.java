@@ -6,122 +6,115 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import cs.model.CsVO;
 
 @Repository
 public class CsDAOH2 implements CsDAO {
 
-	@Autowired
-	Connection conn;
+    @Autowired
+    private DataSource dataSource;
 
-	@Override
-	public int save(CsVO cv) {
-		String sql = "INSERT INTO CS (USERNAME, TITLE, CONTENT, CATEGORY) VALUES (?,?,?,?)";
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setString(1, cv.getUserName());
-			ps.setString(2, cv.getTitle());
-			ps.setString(3, cv.getContent());
-			ps.setString(4, cv.getCategory());
-			return ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return 0;
-		}
-	}
+    @Override
+    public List<CsVO> findAll() {
+        List<CsVO> list = new ArrayList<>();
+        String sql = "SELECT * FROM CS ORDER BY ID DESC";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                CsVO vo = new CsVO();
+                vo.setId(rs.getInt("id"));
+                vo.setTitle(rs.getString("title"));
+                
+                // 💡 [정밀 타격] vo.setWriter 대신 대철이의 userName 필드로 일치화!
+                vo.setUserName(rs.getString("writer")); 
+                
+                // 💡 [정밀 타격] vo.setRegdate 대신 대철이의 createdAt (Timestamp) 규격으로 완벽하게 싱크 완료!
+                vo.setCreatedAt(rs.getTimestamp("regdate")); 
+                
+                list.add(vo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 
-	@Override
-	public List<CsVO> findAll() {
-		String sql = "SELECT * FROM CS ORDER BY ID DESC";
-		try (PreparedStatement ps = conn.prepareStatement(sql);
-			 ResultSet rs = ps.executeQuery()) {
+    @Override
+    public int save(CsVO cv) {
+        String sql = "INSERT INTO CS (CATEGORY, TITLE, CONTENT, WRITER) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, cv.getCategory()); 
+            ps.setString(2, cv.getTitle());
+            ps.setString(3, cv.getContent());
+            
+            // 💡 [정밀 타격] cv.getWriter() 대신 대철이 원본의 cv.getUserName()으로 완벽하게 저격 매핑!
+            ps.setString(4, cv.getUserName()); 
+            
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
 
-			List<CsVO> list = new ArrayList<>();
+    @Override
+    public CsVO findById(int id) {
+        String sql = "SELECT * FROM CS WHERE ID = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    CsVO vo = new CsVO();
+                    vo.setId(rs.getInt("id"));
+                    vo.setTitle(rs.getString("title"));
+                    vo.setContent(rs.getString("content"));
+                    
+                    // 💡 [정밀 타격] 상단과 동일하게 대철이의 userName과 createdAt(Timestamp) 구조로 전면 개정!
+                    vo.setUserName(rs.getString("writer"));
+                    vo.setCreatedAt(rs.getTimestamp("regdate"));
+                    
+                    return vo;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-			while (rs.next()) {
-				CsVO cv = CsVO.builder()
-						.id(rs.getInt("ID"))
-						.userName(rs.getString("USERNAME"))
-						.title(rs.getString("TITLE"))
-						.content(rs.getString("CONTENT"))
-						.category(rs.getString("CATEGORY"))
-						.status(rs.getString("STATUS"))
-						.answer(rs.getString("ANSWER"))
-						.adminId(rs.getString("ADMIN_ID"))
-						.createdAt(rs.getTimestamp("CREATED_AT"))
-						.answeredAt(rs.getTimestamp("ANSWERED_AT"))
-						.updatedAt(rs.getTimestamp("UPDATED_AT"))
-						.deleted(rs.getBoolean("IS_DELETED"))
-						.build();
+    @Override
+    public int update(CsVO cv) {
+        String sql = "UPDATE CS SET TITLE = ?, CONTENT = ? WHERE ID = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, cv.getTitle());
+            ps.setString(2, cv.getContent());
+            ps.setInt(3, cv.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
 
-				list.add(cv);
-			}
-			return list;
-
-		} catch (SQLException e) {
-			System.out.println("(findAll)");
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	@Override
-	public CsVO findById(int id) {
-		String sql = "SELECT * FROM CS WHERE ID = ?";
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, id);
-
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return CsVO.builder()
-							.id(rs.getInt("ID"))
-							.userName(rs.getString("USERNAME"))
-							.title(rs.getString("TITLE"))
-							.content(rs.getString("CONTENT"))
-							.category(rs.getString("CATEGORY"))
-							.status(rs.getString("STATUS"))
-							.answer(rs.getString("ANSWER"))
-							.adminId(rs.getString("ADMIN_ID"))
-							.createdAt(rs.getTimestamp("CREATED_AT"))
-							.answeredAt(rs.getTimestamp("ANSWERED_AT"))
-							.updatedAt(rs.getTimestamp("UPDATED_AT"))
-							.deleted(rs.getBoolean("IS_DELETED"))
-							.build();
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	@Override
-	public int update(CsVO cv) {
-		String sql = "UPDATE CS SET STATUS=?, ANSWER=?, ADMIN_ID=? WHERE ID=?";
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setString(1, cv.getStatus());
-			ps.setString(2, cv.getAnswer());
-			ps.setString(3, cv.getAdminId());
-			ps.setInt(4, cv.getId());
-			return ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return 0;
-		}
-	}
-
-	@Override
-	public int delete(int id) {
-		String sql = "DELETE FROM CS WHERE ID = ?";
-		try (PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, id);
-			return ps.executeUpdate();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return 0;
-		}
-	}
+    @Override
+    public int delete(int id) {
+        String sql = "DELETE FROM CS WHERE ID = ?";
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
 }

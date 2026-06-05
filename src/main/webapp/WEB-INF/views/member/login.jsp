@@ -27,7 +27,13 @@
             <button type="submit" class="btn-bs" style="width: 100%; padding: 12px; font-weight: bold;">
                 로그인
             </button>
+
         </form>
+			<a href="/kakao/login"
+				style="display: block; width: 100%; padding: 12px; margin-top: 8px; text-align: center; text-decoration: none; background: #FEE500; color: #000; font-weight: bold;">
+				카카오 로그인 
+				</a>
+		</form>
 
         <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
             아직 회원이 아니신가요? <a href="/signup" style="color: #e67e22; font-weight: bold;">회원가입</a>

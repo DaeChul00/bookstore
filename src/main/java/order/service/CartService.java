@@ -1,51 +1,54 @@
 package order.service;
 
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import order.model.CartVO;
-import order.repository.CartDAO;
+import order.repository.CartDAOH2;
+import java.util.List;
 
 @Service
 public class CartService {
 
-	@Autowired
-	private CartDAO cartDao; // CartDAOH2가 주입됩니다.
+    @Autowired
+    private CartDAOH2 cartDAO;
 
-	// 1. 장바구니 목록 조회
-	public List<CartVO> getCartList(String memberId) {
-		return cartDao.findByMemberId(memberId);
-	}
+    public boolean addCart(CartVO cart) {
+        // 1. 이미 동일한 도서가 장바구니에 적재되어 있는지 검사
+        List<CartVO> currentCart = cartDAO.findCartByMemberId(cart.getMemberId());
+        
+        if (currentCart != null) {
+            for (CartVO item : currentCart) {
+                if (item.getBookId() == cart.getBookId()) {
+                    // 동일한 책이 있으면 수량만 추가 누적 업데이트
+                    item.setCount(item.getCount() + cart.getCount());
+                    return cartDAO.updateCartCount(item) > 0;
+                }
+            }
+        }
+        
+        // 2. 없는 도서라면 신규 행으로 인서트 가동
+        int result = cartDAO.insertCart(cart);
+        return result > 0; 
+    }
 
-	// 2. 장바구니 담기 (기존 로직 유지)
-	public boolean addCart(CartVO cart) {
-		List<CartVO> remoteList = cartDao.findByMemberId(cart.getMemberId());
-		for (CartVO remoteCart : remoteList) {
-			if (remoteCart.getBookId() == cart.getBookId()) {
-				remoteCart.setCount(remoteCart.getCount() + cart.getCount());
-				return cartDao.updateCount(remoteCart) > 0;
-			}
-		}
-		return cartDao.insert(cart) > 0;
-	}
+    public List<CartVO> getCartList(String memberId) {
+        return cartDAO.findCartByMemberId(memberId);
+    }
 
-	// 3. 장바구니 수량 수정 (추가)
-	public boolean updateCartCount(int cartId, int count) {
-		// 컨트롤러에서 받은 파라미터로 VO 객체를 생성해 DAO에 전달합니다.
-		CartVO cart = CartVO.builder()
-				.cartId(cartId)
-				.count(count)
-				.build();
-		return cartDao.updateCount(cart) > 0;
-	}
+    public boolean updateCartCount(String memberId, int bookId, int count) {
+        CartVO cart = CartVO.builder()
+                            .memberId(memberId)
+                            .bookId(bookId)
+                            .count(count)
+                            .build();
+        return cartDAO.updateCartCount(cart) > 0;
+    }
 
-	// 4. 장바구니 개별 삭제 (추가)
-	public boolean deleteCart(int cartId) {
-		return cartDao.delete(cartId) > 0;
-	}
+    public boolean deleteCart(String memberId, int bookId) {
+        return cartDAO.deleteCart(memberId, bookId) > 0;
+    }
 
-	// 5. 장바구니 전체 비우기 (주문 완료용)
-	public boolean clearCart(String memberId) {
-		return cartDao.deleteByMemberId(memberId) > 0;
-	}
+    public boolean clearCart(String memberId) {
+        return cartDAO.clearCart(memberId) > 0;
+    }
 }

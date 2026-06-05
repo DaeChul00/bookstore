@@ -1,9 +1,5 @@
 package member.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,102 +10,84 @@ import org.springframework.stereotype.Repository;
 
 import member.model.MemberVO;
 
-@Repository // ÀÌ Å¬·¡½º°¡ µ¥ÀÌÅÍ ÀúÀå¼Ò(DAO)ÀÓÀ» Spring¿¡ ¾Ë¸²
+@Repository // ì´ í´ë˜ìŠ¤ê°€ ë°ì´í„° ì ‘ê·¼(DAO) ê°ì²´ì„ì„ Spring ê´€ì œíƒ‘ì— ì•Œë¦¼
 public class MemberDAOH2 implements MemberDAO {
-    
-    @Autowired
-    private JdbcTemplate jdbcTemplate; // DB ¿¬°á ¹× ½ÇÇàÀ» µµ¿ÍÁÖ´Â Spring µµ±¸
-    @Autowired
-    private Connection conn;
+	
+	// DB ì—°ê²° ë° ì‹¤í–‰ì„ ë„ì™€ì£¼ëŠ” Spring ê°ì²´ ì£¼ì… (ì´ê²ƒ í•˜ë‚˜ë©´ ë½ ê±±ì • ì—†ì´ ì™„ë²½í•©ë‹ˆë‹¤!)
+	@Autowired
+	private JdbcTemplate jdbcTemplate; 
 
-    @Override
-    public MemberVO login(String id, String pw) {
-        // ¾ÆÀÌµğ¿Í ºñ¹Ğ¹øÈ£°¡ µ¿½Ã¿¡ ÀÏÄ¡ÇÏ´Â µ¥ÀÌÅÍ¸¦ Ã£À½
-        String sql = "SELECT * FROM MEMBER WHERE MEMBER_ID = ? AND PASSWORD = ?";
-        try {
-            // °á°ú°¡ 1°³ÀÏ ¶§ »ç¿ëÇÏ¸ç, VO °´Ã¼¿¡ °ªÀ» ÀÚµ¿À¸·Î Ã¤¿öÁÜ
-            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(MemberVO.class), id, pw);
-        } catch (Exception e) {
-            // ÀÏÄ¡ÇÏ´Â µ¥ÀÌÅÍ°¡ ¾øÀ¸¸é ¿¹¿Ü°¡ ¹ß»ıÇÏ¹Ç·Î null ¹İÈ¯
-            return null; 
-        }
-    }
+	@Override
+	public MemberVO login(String id, String pw) {
+		// ì•„ì´ë””ì™€ ë¹„ë°€ë²ˆí˜¸ê°€ ë™ì‹œì— ì¼ì¹˜í•˜ëŠ” ë°ì´í„°ë¥¼ ì¡°íšŒí•©ë‹ˆë‹¤.
+		String sql = "SELECT * FROM MEMBER WHERE MEMBER_ID = ? AND PASSWORD = ?";
+		try {
+			// ê²°ê³¼ê°€ ì •í™•íˆ 1ê±´ì¼ ë•Œ VO ê°ì²´ì— ê°’ì„ ìë™ìœ¼ë¡œ ë°”ì¸ë”©í•˜ì—¬ ë°˜í™˜í•©ë‹ˆë‹¤.
+			return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(MemberVO.class), id, pw);
+		} catch (Exception e) {
+			// ë§¤ì¹­ë˜ëŠ” íšŒì›ì´ ì—†ìœ¼ë©´ ì˜ˆì™¸ê°€ ë°œìƒí•˜ë¯€ë¡œ ì•ˆì „í•˜ê²Œ nullì„ ë°˜í™˜í•©ë‹ˆë‹¤.
+			return null; 
+		}
+	}
 
-    @Override
-    public void signup(MemberVO vo) {
-        // »õ·Î¿î È¸¿ø Á¤º¸¸¦ DB¿¡ »ğÀÔÇÔ (±âº» ±ÇÇÑÀº USER)
-        String sql = "INSERT INTO MEMBER (MEMBER_ID, PASSWORD, NAME, EMAIL, ROLE) VALUES (?, ?, ?, ?, 'USER')";
-        jdbcTemplate.update(sql, vo.getMemberId(), vo.getPassword(), vo.getName(), vo.getEmail());
-    }
-    
-    @Override
-    public void updateMember(MemberVO vo) {
-        String sql = "UPDATE MEMBER SET NAME = ?, EMAIL = ? WHERE MEMBER_ID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, vo.getName());
-            ps.setString(2, vo.getEmail());
-            ps.setString(3, vo.getMemberId());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-    
-    @Override
-    public void deleteMember(String memberId) {
-        String sql = "DELETE FROM MEMBER WHERE MEMBER_ID = ?";
-        jdbcTemplate.update(sql, memberId);
-    }
-    
-    @Override
-    public List<MemberVO> findAll(String sort) {
-        List<MemberVO> list = new ArrayList<>();
-        
-        String orderBy = "REGDATE DESC"; // ±âº»°ª
-        
-        if ("name".equals(sort)) orderBy = "NAME ASC";
-        else if ("old".equals(sort)) orderBy = "REGDATE ASC";
-        else if ("id".equals(sort)) orderBy = "MEMBER_ID ASC";
+	@Override
+	public void signup(MemberVO vo) {
+		// ìƒˆë¡œìš´ íšŒì› ì •ë³´ë¥¼ ë°ì´í„°ë² ì´ìŠ¤ì— ì‚½ì…í•©ë‹ˆë‹¤. (ê¸°ë³¸ ê¶Œí•œì€ USER)
+		String sql = "INSERT INTO MEMBER (MEMBER_ID, PASSWORD, NAME, EMAIL, ROLE) VALUES (?, ?, ?, ?, 'USER')";
+		jdbcTemplate.update(sql, vo.getMemberId(), vo.getPassword(), vo.getName(), vo.getEmail());
+	}
+	
+	@Override
+	public void updateMember(MemberVO vo) {
+		// JdbcTemplateì„ ì‚¬ìš©í•˜ì—¬ ê¸°ì¡´ì˜ ë³µì¡í–ˆë˜ PreparedStatement ì½”ë“œê°€ ì•„ì£¼ ê°„ê²°í•´ì§‘ë‹ˆë‹¤.
+		String sql = "UPDATE MEMBER SET NAME = ?, EMAIL = ? WHERE MEMBER_ID = ?";
+		jdbcTemplate.update(sql, vo.getName(), vo.getEmail(), vo.getMemberId());
+	}
+	
+	@Override
+	public void deleteMember(String memberId) {
+		String sql = "DELETE FROM MEMBER WHERE MEMBER_ID = ?";
+		jdbcTemplate.update(sql, memberId);
+	}
+	
+	@Override
+	public List<MemberVO> findAll(String sort) {
+		String orderBy = "REGDATE DESC"; // ê¸°ë³¸ ì •ë ¬ê°’: ìµœì‹  ê°€ì… ìˆœ
+		
+		if ("name".equals(sort)) orderBy = "NAME ASC";
+		else if ("old".equals(sort)) orderBy = "REGDATE ASC";
+		else if ("id".equals(sort)) orderBy = "MEMBER_ID ASC";
 
-        // ORDER BY µÚ¿¡ °ø¹éÀÌ ÀÖ´ÂÁö ²À È®ÀÎÇÏ¼¼¿ä!
-        String sql = "SELECT * FROM MEMBER ORDER BY " + orderBy;
-        
-        try (PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                MemberVO member = new MemberVO();
-                member.setMemberId(rs.getString("MEMBER_ID"));
-                member.setName(rs.getString("NAME"));
-                member.setEmail(rs.getString("EMAIL"));
-                member.setRole(rs.getString("ROLE"));
-                member.setRegdate(rs.getTimestamp("REGDATE"));
-                list.add(member);
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return list;
-    }
-    
-    @Override
-    public void updateRole(String memberId, String role) {
-        String sql = "UPDATE MEMBER SET ROLE = ? WHERE MEMBER_ID = ?";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, role);
-            ps.setString(2, memberId);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+		String sql = "SELECT * FROM MEMBER ORDER BY " + orderBy;
+		
+		try {
+			// query ë©”ì„œë“œì™€ BeanPropertyRowMapperë¥¼ ì‚¬ìš©í•˜ë©´ while(rs.next()) ë£¨í”„ ì—†ì´ ë°”ë¡œ ë¦¬ìŠ¤íŠ¸ í˜• ë³€í™˜ê¹Œì§€ ì™„ë£Œë©ë‹ˆë‹¤.
+			return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(MemberVO.class));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ArrayList<>(); // ì—ëŸ¬ ë°œìƒ ì‹œ ì•ˆì „í•˜ê²Œ ë¹ˆ ë¦¬ìŠ¤íŠ¸ ë°˜í™˜
+		}
+	}
+	
+	@Override
+	public void updateRole(String memberId, String role) {
+		String sql = "UPDATE MEMBER SET ROLE = ? WHERE MEMBER_ID = ?";
+		jdbcTemplate.update(sql, role, memberId);
+	}
 
-    @Override
-    public MemberVO findById(String memberId) {
-        String sql = "SELECT * FROM MEMBER WHERE MEMBER_ID = ?";
-        try {
-            // ¾ÆÀÌµğ·Î Á¶È¸ÇØ¼­ °á°ú°¡ ÀÖÀ¸¸é VO¿¡ ´ã¾Æ ¹İÈ¯, ¾øÀ¸¸é ¿¹¿Ü ¹ß»ı
-            return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(MemberVO.class), memberId);
-        } catch (Exception e) {
-            // Á¶È¸ °á°ú°¡ ¾øÀ¸¸é null ¹İÈ¯
-            return null;
-        }
-    }
+	@Override
+	public MemberVO findById(String memberId) {
+		String sql = "SELECT * FROM MEMBER WHERE MEMBER_ID = ?";
+		try {
+			return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(MemberVO.class), memberId);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	@Override
+	public MemberVO selectById(String memberId) {
+		// ì¸í„°í˜ì´ìŠ¤ ê·œê²©ì„ ë§ì¶”ê¸° ìœ„í•´ findByIdì™€ ë™ì¼í•œ ë¡œì§ì„ ìˆ˜í–‰í•˜ë„ë¡ ì—°ê²°í•©ë‹ˆë‹¤.
+		return findById(memberId);
+	}
 }

@@ -3,9 +3,10 @@ package member.controller;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -16,81 +17,81 @@ import member.service.MemberService;
 @Controller
 public class MemberController {
 
-    @Autowired
-    private MemberService memberService;
+	@Autowired
+	private MemberService memberService;
 
-    // 1. 회원가입 화면 띄우기 (URL: /signup)
-    @RequestMapping(value = "/signup", method = RequestMethod.GET)
-    public String signupForm(Model model) {
-        model.addAttribute("contentPage", "/WEB-INF/views/member/signup.jsp");
-        return "layout/layout"; // 전체 레이아웃 리턴
-    }
+	// 1. 회원가입 화면 띄우기 (URL: /signup)
+	@RequestMapping(value = "/signup", method = RequestMethod.GET)
+	public String signupForm(Model model) {
+		model.addAttribute("contentPage", "/WEB-INF/views/member/signup.jsp");
+		return "layout/layout";
+	}
 
-    // 2. 회원가입 처리 로직
-    @RequestMapping(value = "/signup", method = RequestMethod.POST)
-    public String signup(MemberVO vo, RedirectAttributes ra) {
-        try {
-            memberService.signup(vo);
-            // 가입 성공 시
-            return "redirect:/login";
-        } catch (RuntimeException e) {
-            if ("DUPLICATE_ID".equals(e.getMessage())) {
-                // 중복 아이디 에러 발생 시 메시지 전달
-                ra.addFlashAttribute("msg", "이미 존재하는 아이디입니다.");
-                return "redirect:/signup";
-            }
-            return "redirect:/signup?error=fail";
-        }
-    }
- // 1. 수정 폼 띄우기 (현재 로그인한 유저 정보를 담아서 보냄)
-    @RequestMapping(value = "/member/update", method = RequestMethod.GET)
-    public String updateForm(Model model, HttpSession session) {
-        MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-        if (loginUser == null) return "redirect:/login";
+	// 2. 회원가입 처리 로직 (민한이의 e.printStackTrace() 반영 통합)
+	@RequestMapping(value = "/signup", method = RequestMethod.POST)
+	public String signup(MemberVO vo, RedirectAttributes ra) {
+		try {
+			memberService.signup(vo);
+			return "redirect:/login";
+		} catch (RuntimeException e) {
+			// 💡 민한이의 충돌 코드인 에러 트레이스 출력 로직을 깔끔하게 살려둡니다.
+			e.printStackTrace();
+			
+			if ("DUPLICATE_ID".equals(e.getMessage())) {
+				ra.addFlashAttribute("msg", "이미 존재하는 아이디입니다.");
+				return "redirect:/signup";
+			}
+			return "redirect:/signup?error=fail";
+		}
+	}
 
-        model.addAttribute("contentPage", "/WEB-INF/views/member/MemberUpdateForm.jsp");
-        return "layout/layout";
-    }
+	// 3. 회원 정보 수정 폼 띄우기 (스프링 시큐리티 인증 객체 기반으로 변경)
+	@RequestMapping(value = "/member/update", method = RequestMethod.GET)
+	public String updateForm(Model model) {
+		// 💡 시큐리티 관제탑에서 현재 로그인한 유저 아이디를 안전하게 꺼내옵니다.
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+			return "redirect:/login";
+		}
 
-    // 2. 수정 처리
-    @RequestMapping(value = "/member/update", method = RequestMethod.POST)
-    public String update(MemberVO vo, HttpSession session, RedirectAttributes ra) {
-        // 1. DB 정보를 수정합니다.
-        memberService.updateMember(vo);
-        
-        // 2. 세션에 저장된 기존 로그인 정보를 가져옵니다.
-        MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-        
-        if (loginUser != null) {
-            // 3. 세션 객체의 내용을 사용자가 새로 입력한 값으로 덮어씌웁니다.
-            loginUser.setName(vo.getName());
-            loginUser.setEmail(vo.getEmail());
-            
-            // 4. 변경된 객체를 세션에 다시 저장 (갱신)
-            session.setAttribute("loginUser", loginUser);
-        }
+		model.addAttribute("contentPage", "/WEB-INF/views/member/MemberUpdateForm.jsp");
+		return "layout/layout";
+	}
 
-        // 알림 메시지 전달 (선택 사항)
-        ra.addFlashAttribute("msg", "정보가 수정되었습니다.");
-        
-        // 로그인이 풀리지 않은 상태로 리스트로 이동합니다.
-        return "redirect:/book"; 
-    }
-    
-    @RequestMapping("/member/withdraw")
-    public String withdraw(HttpSession session, RedirectAttributes ra) {
-        MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-        
-        if (loginUser != null) {
-            // 1. DB에서 삭제
-            memberService.withdraw(loginUser.getMemberId());
-            
-            // 2. 세션 무효화 (로그아웃)
-            session.invalidate();
-            
-            ra.addFlashAttribute("msg", "회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.");
-        }
-        
-        return "redirect:/book";
-    }
+	// 4. 회원 정보 수정 처리 (수정 후 세션 무효화 처리를 통해 시큐리티 정보 갱신 유도)
+	@RequestMapping(value = "/member/update", method = RequestMethod.POST)
+	public String update(MemberVO vo, HttpSession session, RedirectAttributes ra) {
+		// 1. DB 정보를 수정합니다.
+		memberService.updateMember(vo);
+
+		// 2. 알림 메시지 전달
+		ra.addFlashAttribute("msg", "회원 정보가 수정되었습니다. 다시 로그인해 주세요.");
+		
+		// 3. 💡 시큐리티 환경에서는 안전하게 세션을 한 번 브레이크(invalidate)해주고 
+		// 재로그인하게 만드는 것이 회원 세션 꼬임을 방지하는 가장 정석적인 방법입니다!
+		session.invalidate();
+		
+		return "redirect:/login"; 
+	}
+	
+	// 5. 회원 탈퇴 (시큐리티 인증 객체 기반 완전 초기화)
+	@RequestMapping("/member/withdraw")
+	public String withdraw(HttpSession session, RedirectAttributes ra) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		
+		if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+			// 1. 시큐리티 인증 객체에서 아이디를 꺼내와 DB에서 탈퇴 처리합니다.
+			memberService.withdraw(auth.getName());
+			
+			// 2. 세션 완전히 무효화 (로그아웃 처리)
+			session.invalidate();
+			
+			// 3. 시큐리티 관제탑 컨텍스트도 깨끗하게 클리어해 줍니다.
+			SecurityContextHolder.clearContext();
+			
+			ra.addFlashAttribute("msg", "회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.");
+		}
+		
+		return "redirect:/book";
+	}
 }
