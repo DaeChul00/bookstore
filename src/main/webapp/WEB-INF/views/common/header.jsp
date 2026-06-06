@@ -108,7 +108,9 @@
 
 					<a href="${pageContext.request.contextPath}/member/update"
 						style="color: #666; font-size: 12px;">[정보수정]</a>
-
+						
+					<a href="/order/list" style="color: #666; font-size: 12px;">[주문내역]</a>
+					
 					<c:if test="${loginUser.role == 'ADMIN'}">
 						<a href="${pageContext.request.contextPath}/admin/book/list"
 							style="font-weight: bold;">도서관리</a>

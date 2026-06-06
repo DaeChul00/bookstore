@@ -6,13 +6,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import order.model.CartVO;
 import order.model.OrderVO;
 import order.service.CartService;
 import order.service.OrderService;
+import order.service.ReviewService;
 import member.model.MemberVO;
 
 @Controller
@@ -24,6 +27,9 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private ReviewService reviewService;
     
     private String getLoginId(HttpSession session) {
         MemberVO user = (MemberVO) session.getAttribute("loginUser");
@@ -91,7 +97,32 @@ public class OrderController {
         model.addAttribute("contentPage", "/WEB-INF/views/order/order-list.jsp");
         return "layout/layout";
     }
-
+    
+    @RequestMapping(value = "/review-insert", method = RequestMethod.POST)
+    @ResponseBody // HTML 템플릿 페이지 뷰가 아닌 순수 데이터 응답용 문자열 스트림 처리
+    public String insertReview(
+            @RequestParam("bookId") int bookId,
+            @RequestParam("rating") int rating,
+            @RequestParam("content") String content,
+            HttpSession session) {
+        
+        // 서버 콘솔을 통해 파라미터가 유실 없이 도달했는지 육안으로 최종 검증합니다.
+        System.out.println(">>> [리뷰등록 API] 넘어온 bookId  : " + bookId);
+        System.out.println(">>> [리뷰등록 API] 넘어온 rating  : " + rating);
+        System.out.println(">>> [리뷰등록 API] 넘어온 content : " + content);
+        
+        // 세션 유효성 검증 체킹
+        MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+        if (loginUser == null) {
+            return "login_required";
+        }
+        
+        // 서비스 단을 호출하여 가용한 DB 레포지토리에 INSERT 쿼리를 실행하도록 명령을 위임합니다.
+        boolean isSuccess = reviewService.addReview(bookId, loginUser.getMemberId(), rating, content);
+        
+        return isSuccess ? "success" : "fail";
+    }
+    
     // 세션에서 아이디 가져오는 공통 메서드
     private String getMemberId(HttpSession session) {
         String memberId = (String) session.getAttribute("memberId");
