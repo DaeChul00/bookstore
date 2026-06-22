@@ -29,7 +29,7 @@ public class BookController {
 	@RequestMapping("")
 	public String main(Model model) {
 	    // 서비스에서 평점 높은 도서와 신규 도서 리스트를 가져옵니다.
-	    List<BookVO> topRatedList = service.getTopRatedBooks();
+	    List<BookVO> topRatedList = service.getBestBooks();
 	    List<BookVO> newBookList = service.getNewBooks();
 
 	    model.addAttribute("topRatedList", topRatedList);
@@ -132,4 +132,6 @@ public class BookController {
 	    }
 	    return "redirect:/book/list";
 	}
+	
+	
 }

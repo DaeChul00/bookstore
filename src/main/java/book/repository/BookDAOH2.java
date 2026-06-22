@@ -235,4 +235,36 @@ public class BookDAOH2 implements BookDAO{
 	    return list;
 	}
 	
+	public List<BookVO> getBestBooks() {
+	    List<BookVO> list = new ArrayList<>();
+	    
+	    String sql = "SELECT b.*, " +
+	                 "       COALESCE(AVG(r.RATING), 0.0) AS AVG_RATING, " +
+	                 "       COUNT(r.REVIEW_ID) AS REVIEW_COUNT " +
+	                 "FROM BOOK b " +
+	                 "LEFT JOIN REVIEW r ON b.ID = r.BOOK_ID " +
+	                 "GROUP BY b.ID, b.TITLE, b.BOOKIMAGE, b.PRICE, b.AUTHOR " + // 👈 여기 수정
+	                 "ORDER BY AVG_RATING DESC";
+	    
+	    try (PreparedStatement ps = conn.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+	        
+	        while (rs.next()) {
+	            list.add(BookVO.builder()
+	                .id(rs.getInt("ID"))
+	                .title(rs.getString("TITLE"))
+	                .author(rs.getString("AUTHOR"))
+	                .price(rs.getInt("PRICE"))
+	                .bookimage(rs.getString("BOOKIMAGE")) // 👈rs 데이터 추출 이름도 통일
+	                
+	                .avgRating(Math.round(rs.getDouble("AVG_RATING") * 10) / 10.0)
+	                .reviewCount(rs.getInt("REVIEW_COUNT"))
+	                .build());
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return list;
+	}
+	
 }

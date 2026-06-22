@@ -66,19 +66,20 @@
 .rating {
     color: #f39c12;
     font-weight: bold;
+    font-size: 14px;
+    margin-top: 5px;
 }
 </style>
 
 <div class="main-container">
 
-    <!-- ⭐ 평점 높은 도서 -->
     <div class="section">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>⭐ 평점 높은 도서</h2>
-        <a href="${pageContext.request.contextPath}/book/list?category=title"
-           style="font-size:14px; color:#2c3e50; text-decoration:none;">
-            더보기 →
-        </a>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>⭐ 평점 높은 도서</h2>
+            <a href="${pageContext.request.contextPath}/book/list?category=title"
+               style="font-size:14px; color:#2c3e50; text-decoration:none;">
+                더보기 →
+            </a>
         </div>
         <div class="book-list">
             <c:forEach var="book" items="${topRatedList}">
@@ -91,21 +92,30 @@
                             ${book.title}
                         </a>
                         <div class="book-meta">${book.author}</div>
-                        <div class="rating">★ ${book.rating}</div>
+                        
+                        <div class="rating">
+                            <c:choose>
+                                <c:when test="${book.reviewCount == 0}">
+                                    <span style="color: #aaa; font-weight: normal; font-size: 12px;">💬 첫 리뷰를 기다려요</span>
+                                </c:when>
+                                <c:otherwise>
+                                    ★ ${book.avgRating} <span style="color: #888; font-size: 12px; font-weight: normal;">(${book.reviewCount})</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
                     </div>
                 </div>
             </c:forEach>
         </div>
     </div>
 
-    <!-- 🆕 신간 도서 -->
     <div class="section">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>🆕 신간 도서</h2>
-        <a href="${pageContext.request.contextPath}/book/list"
-           style="font-size:14px; color:#2c3e50; text-decoration:none;">
-            더보기 →
-        </a>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2>🆕 신간 도서</h2>
+            <a href="${pageContext.request.contextPath}/book/list"
+               style="font-size:14px; color:#2c3e50; text-decoration:none;">
+                더보기 →
+            </a>
         </div>
         <div class="book-list">
             <c:forEach var="book" items="${newBookList}">
@@ -118,7 +128,17 @@
                             ${book.title}
                         </a>
                         <div class="book-meta">${book.author}</div>
-                        <div class="rating">★ ${book.rating}</div>
+                        
+                        <div class="rating">
+                            <c:choose>
+                                <c:when test="${book.reviewCount == 0}">
+                                    <span style="color: #aaa; font-weight: normal; font-size: 12px;">💬 첫 리뷰를 기다려요</span>
+                                </c:when>
+                                <c:otherwise>
+                                    ★ ${book.avgRating} <span style="color: #888; font-size: 12px; font-weight: normal;">(${book.reviewCount})</span>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
                     </div>
                 </div>
             </c:forEach>

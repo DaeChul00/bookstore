@@ -14,14 +14,16 @@ import lombok.ToString;
 @ToString
 @Builder
 public class BookVO {
-	private int id;//µ¥ÀÌÅÍº£ÀÌ½º ¹øÈ£
-	private String isbn;//Ã¥ ½Äº°¹øÈ£
-	private String title;//Ã¥ Á¦¸ñ
-	private String author;//Ã¥ ÀúÀÚ
-	private String publisher;//ÃâÆÇ»ç
-	private String publictiondate;//ÃâÆÇÀÏ
-	private int price;//°¡°İ
-	private String content;//³»¿ë
-	private String bookimage;//¸ŞÀÎ ÀÌ¹ÌÁö
-	private float rating;//ÆòÁ¡
+	private int id;//ï¿½ï¿½ï¿½ï¿½ï¿½Íºï¿½ï¿½Ì½ï¿½ ï¿½ï¿½È£
+	private String isbn;//Ã¥ ï¿½Äºï¿½ï¿½ï¿½È£
+	private String title;//Ã¥ ï¿½ï¿½ï¿½ï¿½
+	private String author;//Ã¥ ï¿½ï¿½ï¿½ï¿½
+	private String publisher;//ï¿½ï¿½ï¿½Ç»ï¿½
+	private String publictiondate;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	private int price;//ï¿½ï¿½ï¿½ï¿½
+	private String content;//ï¿½ï¿½ï¿½ï¿½
+	private String bookimage;//ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½
+	private float rating;//ï¿½ï¿½ï¿½ï¿½
+	private double avgRating;   // ì‹¤ì‹œê°„ í‰ì  í‰ê·  (ì˜ˆ: 4.5)
+	private int reviewCount;    // ì‹¤ì‹œê°„ ì´ ë¦¬ë·° ìˆ˜
 }

@@ -38,4 +38,9 @@ public class OrderService {
 	public List<OrderVO> getOrderList(String memberId) {
 		return orderDao.findOrdersByMemberId(memberId);
 	}
+
+	// [수정 완료] 컨트롤러에서 호출하는 메서드 내부를 DAO와 연결합니다.
+	public List<OrderVO> findOrdersByMemberId(String memberId) {
+		return orderDao.findOrdersByMemberId(memberId);
+	}
 }

@@ -13,4 +13,6 @@ public interface BookDAO {
 	public List<BookVO> findAll(String category, String keyword);
 	public List<BookVO> findTopRatedBooks();
 	public List<BookVO> findNewBooks();
+	public List<BookVO> getBestBooks();
+	
 }

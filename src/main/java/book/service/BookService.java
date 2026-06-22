@@ -42,5 +42,8 @@ public class BookService {
 	public List<BookVO> getNewBooks(){
 	    return dao.findNewBooks();
 	}
+	public List<BookVO> getBestBooks() {
+	    return dao.getBestBooks();
+	}
 
 }
