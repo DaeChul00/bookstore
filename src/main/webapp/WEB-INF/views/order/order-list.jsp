@@ -12,17 +12,18 @@
         <thead style="background-color: #f8f9fa; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;">
             <tr style="height: 50px; text-align: center; font-size: 14px;">
                 <th style="width: 15%;">이미지</th>
-                <th style="width: 40%;">상품 정보</th>
+                <th style="width: 35%;">상품 정보</th>
                 <th style="width: 10%;">수량</th>
                 <th style="width: 15%;">결제 금액</th>
-                <th style="width: 20%;">주문 일자</th>
+                <th style="width: 15%;">주문 일자</th>
+                <th style="width: 10%;">배송 상태</th>
             </tr>
         </thead>
         <tbody>
             <c:choose>
                 <c:when test="${empty orderList}">
                     <tr>
-                        <td colspan="5" style="padding: 100px 0; text-align: center; color: #999;">주문 내역이 없습니다.</td>
+                        <td colspan="6" style="text-align: center; padding: 50px 0; color: #999;">주문 내역이 없습니다.</td>
                     </tr>
                 </c:when>
                 <c:otherwise>
@@ -35,10 +36,23 @@
                             <td>${order.count}권</td>
                             <td>
                                 <strong style="color: #d9534f;">
-							        <fmt:formatNumber value="${order.orderPrice}" type="number"/>원
-							    </strong>
+                                    <fmt:formatNumber value="${order.orderPrice}" type="number"/>원
+                                </strong>
                             </td>
                             <td style="font-size: 13px; color: #666;">${order.orderDate}</td>
+                            <td>
+                                <c:choose>
+                                    <c:when test="${order.deliveryStatus eq '배송완료'}">
+                                        <span class="badge bg-success" style="font-size: 13px; padding: 6px 12px;">배송완료</span>
+                                    </c:when>
+                                    <c:when test="${order.deliveryStatus eq '배송중'}">
+                                        <span class="badge bg-info text-white" style="font-size: 13px; padding: 6px 12px;">배송중</span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="badge bg-secondary" style="font-size: 13px; padding: 6px 12px;">${empty order.deliveryStatus ? '주문완료' : order.deliveryStatus}</span>
+                                    </c:otherwise>
+                                </c:choose>
+                            </td>
                         </tr>
                     </c:forEach>
                 </c:otherwise>
@@ -49,7 +63,7 @@
     <div style="text-align: center; margin-top: 40px;">
         <a href="${pageContext.request.contextPath}/book/list" 
            style="padding: 12px 40px; border: 1px solid #2c3e50; color: #2c3e50; text-decoration: none; font-weight: bold; display: inline-block;">
-           계속 쇼핑하기
+            계속 쇼핑하기
         </a>
     </div>
 </div>

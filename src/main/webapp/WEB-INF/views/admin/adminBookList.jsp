@@ -5,7 +5,7 @@
 <div class="container" style="margin-top: 40px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>📚 도서 통합 관리 (관리자)</h2>
-        <a href="${pageContext.request.contextPath}/book/insertform\" class="btn btn-primary">새 도서 등록</a>
+        <a href="${pageContext.request.contextPath}/book/insertform" class="btn btn-primary">새 도서 등록</a>
     </div>
 
     <table class="table table-hover" style="vertical-align: middle;">

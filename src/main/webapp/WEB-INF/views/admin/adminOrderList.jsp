@@ -16,7 +16,7 @@
                 <th style="width: 100px;">이미지</th>
                 <th>상품 정보</th>
                 <th style="width: 80px;">수량</th>
-                <th style="width: 130px;">결제 예정 금액</th>
+                <th style="width: 130px;">결제 금액</th>
                 <th style="width: 150px;">주문 일자</th>
                 <th style="width: 180px;">배송 상태 변경</th>
             </tr>
@@ -38,12 +38,13 @@
                     <td>${item.count}권</td>
                     <td>
                         <span style="color: #d9534f; font-weight: bold;">
-                            <fmt:formatNumber value="${item.orderPrice * item.count}" type="number"/>원
+                            <fmt:formatNumber value="${item.orderPrice}" type="number"/>원
                         </span>
                     </td>
                     <td style="font-size: 13px; color: #666;">${item.orderDate}</td>
                     <td>
                         <form action="${pageContext.request.contextPath}/admin/order/updateStatus" method="post" style="display: flex; gap: 5px; justify-content: center;">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                             <input type="hidden" name="orderId" value="${item.orderId}">
                             <select name="deliveryStatus" class="form-select form-select-sm" style="width: 110px; font-size: 13px;">
                                 <option value="주문완료" <c:if test="${empty item.deliveryStatus || item.deliveryStatus eq '주문완료'}">selected</c:if>>주문완료</option>
