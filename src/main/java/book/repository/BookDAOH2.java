@@ -1,235 +1,131 @@
 package book.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-
 import book.model.BookVO;
 
 @Repository
 public class BookDAOH2 implements BookDAO {
-    
+
     @Autowired
-    private DataSource dataSource;
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     public int insert(BookVO book) {
-        String sql = "INSERT INTO BOOK (isbn, title, author, publisher, publictiondate, price, content, bookimage, rating) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        try (Connection conn = dataSource.getConnection(); 
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-            ps.setString(1, book.getIsbn());
-            ps.setString(2, book.getTitle());
-            ps.setString(3, book.getAuthor());
-            ps.setString(4, book.getPublisher());
-            ps.setString(5, book.getPublictiondate());
-            ps.setInt(6, book.getPrice());
-            ps.setString(7, book.getContent());
-            ps.setString(8, book.getBookimage());
-            ps.setFloat(9, book.getRating());
-            
-            return ps.executeUpdate();
-            
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        }
+        String sql = "INSERT INTO BOOK (isbn, title, author, publisher, publictiondate, price, content, bookimage, rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        return jdbcTemplate.update(sql, book.getIsbn(), book.getTitle(), book.getAuthor(), book.getPublisher(),
+                book.getPublictiondate(), book.getPrice(), book.getContent(), book.getBookimage(), book.getRating());
     }
 
     @Override
     public List<BookVO> findAll() {
-        List<BookVO> list = new ArrayList<>();
         String sql = "SELECT * FROM BOOK ORDER BY ID DESC";
-
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                list.add(resultSetToBook(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
+        return jdbcTemplate.query(sql, new BookMapper());
     }
 
     @Override
     public BookVO findById(int id) {
         String sql = "SELECT * FROM BOOK WHERE ID = ?";
-        
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setInt(1, id);
-            
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return resultSetToBook(rs);
-                }
-            }
-            
+        try {
+            return jdbcTemplate.queryForObject(sql, new BookMapper(), id);
         } catch (Exception e) {
-            e.printStackTrace();
+            return null;
         }
-        
-        return null;
     }
 
     @Override
     public int update(BookVO book) {
-        String sql = "UPDATE BOOK SET " +
-                     "ISBN=?, TITLE=?, AUTHOR=?, PUBLISHER=?, "+
-                     "PUBLICTIONDATE=?, PRICE=?, CONTENT=?, "+
-                     "BOOKIMAGE=?, RATING=? "+
-                     "WHERE ID=?";
-                     
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-            ps.setString(1, book.getIsbn());
-            ps.setString(2, book.getTitle());
-            ps.setString(3, book.getAuthor());
-            ps.setString(4, book.getPublisher());
-            ps.setString(5, book.getPublictiondate());
-            ps.setInt(6, book.getPrice());
-            ps.setString(7, book.getContent());
-            ps.setString(8, book.getBookimage());
-            ps.setFloat(9, book.getRating());
-            ps.setInt(10, book.getId());
-            
-            return ps.executeUpdate();
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return 0;
+        String sql = "UPDATE BOOK SET ISBN=?, TITLE=?, AUTHOR=?, PUBLISHER=?, PUBLICTIONDATE=?, PRICE=?, CONTENT=?, BOOKIMAGE=?, RATING=? WHERE ID=?";
+        return jdbcTemplate.update(sql, book.getIsbn(), book.getTitle(), book.getAuthor(), book.getPublisher(),
+                book.getPublictiondate(), book.getPrice(), book.getContent(), book.getBookimage(), book.getRating(), book.getId());
     }
 
     @Override
     public int delete(int id) {
         String sql = "DELETE FROM BOOK WHERE ID = ?";
-        
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-             
-            ps.setInt(1, id);
-            return ps.executeUpdate();
-            
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        }
+        return jdbcTemplate.update(sql, id);
     }
-    
+
     @Override
     public List<BookVO> findAll(String category, String keyword) {
-        List<BookVO> list = new ArrayList<>();
-
-        if (!"title".equals(category) &&
-            !"author".equals(category) &&
-            !"publisher".equals(category)) {
-            category = "title";
-        }
-
+        String validCategory = validateCategory(category);
         StringBuilder sql = new StringBuilder("SELECT * FROM BOOK");
-
+        
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" WHERE ").append(category).append(" LIKE ?");
+            sql.append(" WHERE ").append(validCategory).append(" LIKE ?");
+            return jdbcTemplate.query(sql.append(" ORDER BY ID DESC").toString(), new BookMapper(), "%" + keyword + "%");
         }
-
-        sql.append(" ORDER BY ID DESC");
-
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                ps.setString(1, "%" + keyword + "%");
-            }
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(resultSetToBook(rs));
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
+        return jdbcTemplate.query(sql.append(" ORDER BY ID DESC").toString(), new BookMapper());
     }
 
     @Override
     public List<BookVO> findTopRatedBooks() {
-        List<BookVO> list = new ArrayList<>();
         String sql = "SELECT * FROM BOOK ORDER BY RATING DESC LIMIT 8";
-
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                list.add(resultSetToBook(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
+        return jdbcTemplate.query(sql, new BookMapper());
     }
 
     @Override
     public List<BookVO> findNewBooks() {
-        List<BookVO> list = new ArrayList<>();
         String sql = "SELECT * FROM BOOK ORDER BY ID DESC LIMIT 8";
-
-        try (Connection conn = dataSource.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                list.add(resultSetToBook(rs));
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return list;
+        return jdbcTemplate.query(sql, new BookMapper());
     }
 
-    private BookVO resultSetToBook(ResultSet rs) {
-        try {
-            BookVO book = new BookVO();
-            book.setId(rs.getInt("ID"));
-            book.setIsbn(rs.getString("ISBN"));
-            book.setTitle(rs.getString("TITLE"));
-            book.setAuthor(rs.getString("AUTHOR"));
-            book.setPublisher(rs.getString("PUBLISHER"));
-            book.setPublictiondate(rs.getString("PUBLICTIONDATE"));
-            book.setPrice(rs.getInt("PRICE"));
-            book.setContent(rs.getString("CONTENT"));
-            book.setBookimage(rs.getString("BOOKIMAGE"));
-            book.setRating(rs.getFloat("RATING"));
-            return book;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+    // LIMIT, OFFSET 페이징 처리의 JdbcTemplate 컨버전
+    @Override
+    public List<BookVO> findWithPaging(String category, String keyword, int pagePerCount, int requestPage) {
+        String validCategory = validateCategory(category);
+        StringBuilder sql = new StringBuilder("SELECT * FROM BOOK");
+        int offset = (requestPage - 1) * pagePerCount;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" WHERE ").append(validCategory).append(" LIKE ? ORDER BY ID DESC LIMIT ? OFFSET ?");
+            return jdbcTemplate.query(sql.toString(), new BookMapper(), "%" + keyword + "%", pagePerCount, offset);
+        }
+        sql.append(" ORDER BY ID DESC LIMIT ? OFFSET ?");
+        return jdbcTemplate.query(sql.toString(), new BookMapper(), pagePerCount, offset);
+    }
+
+    // 총 도서 수 카운팅
+    @Override
+    public int getTotalCount(String category, String keyword) {
+        String validCategory = validateCategory(category);
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM BOOK");
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" WHERE ").append(validCategory).append(" LIKE ?");
+            return jdbcTemplate.queryForObject(sql.toString(), Integer.class, "%" + keyword + "%");
+        }
+        return jdbcTemplate.queryForObject(sql.toString(), Integer.class);
+    }
+
+    private String validateCategory(String category) {
+        if (!"title".equals(category) && !"author".equals(category) && !"publisher".equals(category)) {
+            return "title";
+        }
+        return category;
+    }
+
+    private static final class BookMapper implements RowMapper<BookVO> {
+        @Override
+        public BookVO mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return BookVO.builder()
+                    .id(rs.getInt("ID"))
+                    .isbn(rs.getString("ISBN"))
+                    .title(rs.getString("TITLE"))
+                    .author(rs.getString("AUTHOR"))
+                    .publisher(rs.getString("PUBLISHER"))
+                    .publictiondate(rs.getString("PUBLICTIONDATE"))
+                    .price(rs.getInt("PRICE"))
+                    .content(rs.getString("CONTENT"))
+                    .bookimage(rs.getString("BOOKIMAGE"))
+                    .rating(rs.getFloat("RATING"))
+                    .build();
         }
     }
 }
