@@ -63,49 +63,75 @@
 
 <form id="cartActionForm" method="post" style="display:none;">
     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-    <input type="hidden" name="bookId" id="actionBookId"/>
+    
+    <input type="hidden" name="cartId" id="actionBookId"/>
     <input type="hidden" name="count" id="actionCount"/>
 </form>
 
 <script>
-// 💡 시큐리티 인증 태그를 이용해 로그인 여부를 정확히 낚아챕니다.
 var isLogin = false;
 <sec:authorize access="isAuthenticated()">
     isLogin = true;
 </sec:authorize>
 
-// 1. 수량 변경 통합 제어
 function handleCountChange(bookId, count) {
+    if (count < 1) {
+        alert("최소 수량은 1개입니다.");
+        return;
+    }
+
     if (isLogin) {
-        // [회원] 서버의 updateCart 컨트롤러 호출
-        var form = document.getElementById("cartActionForm");
-        form.action = "${pageContext.request.contextPath}/order/updateCart";
-        document.getElementById("actionBookId").value = bookId;
-        document.getElementById("actionCount").value = count;
-        form.submit();
+        var url = "${pageContext.request.contextPath}/order/updateCartAsync";
+        var csrfParameterName = "${_csrf.parameterName}";
+        var csrfToken = "${_csrf.token}";
+
+        var formData = new URLSearchParams();
+        formData.append("cartId", bookId); 
+        formData.append("count", count);    
+        formData.append(csrfParameterName, csrfToken);
+
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData.toString()
+        })
+        .then(function(response) { 
+            return response.json(); 
+        })
+        .then(function(data) {
+            if (data.status === "success") {
+                location.reload();
+            } else {
+                alert("수량 변경 반영에 실패했습니다.");
+            }
+        })
+        .catch(function(error) {
+            console.error("Error:", error);
+            alert("서버 통신 중 오류가 발생했습니다.");
+        });
+
     } else {
-        // [비회원] 브라우저 쿠키 직접 수정 후 리프레시
         updateGuestCartCookie(bookId, parseInt(count));
     }
 }
 
-// 2. 항목 삭제 통합 제어
 function handleDelete(bookId) {
     if(confirm("해당 상품을 장바구니에서 삭제하시겠습니까?")) {
         if (isLogin) {
-            // [회원] 서버의 deleteCart 컨트롤러 호출
             var form = document.getElementById("cartActionForm");
             form.action = "${pageContext.request.contextPath}/order/deleteCart";
+            
+            // 💡 여기서 id가 actionBookId인 인풋에 bookId(실제 컬럼에선 BOOK_ID 타깃)를 꽂아 넘깁니다.
             document.getElementById("actionBookId").value = bookId;
             form.submit();
         } else {
-            // [비회원] 브라우저 쿠키에서 해당 품목 제거 후 리프레시
             removeGuestCartCookie(bookId);
         }
     }
 }
 
-// 3. 주문하기 누를 때 분기
 function handleOrder() {
     if (!isLogin) {
         alert("로그인 후 주문이 가능합니다. 로그인 페이지로 이동합니다.");
@@ -114,8 +140,6 @@ function handleOrder() {
         location.href = "${pageContext.request.contextPath}/order/buy";
     }
 }
-
-// ================= 비회원 전용 쿠키 가공 로직 유틸리티 =================
 
 function getCookie(name) {
     var value = "; " + document.cookie;
@@ -126,27 +150,47 @@ function getCookie(name) {
 
 function updateGuestCartCookie(bookId, newCount) {
     var cartCookie = getCookie("guestCart");
+    var cartList = [];
+    
     if (cartCookie) {
-        var cartList = JSON.parse(decodeURIComponent(cartCookie));
-        for (var i = 0; i < cartList.length; i++) {
-            if (cartList[i].bookId === bookId) {
-                cartList[i].count = newCount;
-                break;
-            }
+        try {
+            var decoded = decodeURIComponent(cartCookie);
+            cartList = JSON.parse(decoded);
+        } catch (e) {
+            console.error("Cookie parse error", e);
+            cartList = [];
         }
-        document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
-        location.reload();
     }
+    
+    var isExist = false;
+    for (var i = 0; i < cartList.length; i++) {
+        if (cartList[i].bookId === bookId) {
+            cartList[i].count = newCount;
+            isExist = true;
+            break;
+        }
+    }
+    
+    if (!isExist) {
+        cartList.push({ bookId: bookId, count: newCount });
+    }
+    
+    document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
+    location.reload();
 }
 
 function removeGuestCartCookie(bookId) {
     var cartCookie = getCookie("guestCart");
     if (cartCookie) {
-        var cartList = JSON.parse(decodeURIComponent(cartCookie));
-        cartList = cartList.filter(function(item) {
-            return item.bookId !== bookId;
-        });
-        document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
+        try {
+            var cartList = JSON.parse(decodeURIComponent(cartCookie));
+            cartList = cartList.filter(function(item) {
+                return item.bookId !== bookId;
+            });
+            document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
+        } catch(e) {
+            document.cookie = "guestCart=; path=/; max-age=0";
+        }
         location.reload();
     }
 }

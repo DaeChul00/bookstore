@@ -35,8 +35,8 @@
                             <td>${order.count}권</td>
                             <td>
                                 <strong style="color: #d9534f;">
-                                    <fmt:formatNumber value="${order.orderPrice * order.count}" type="number"/>원
-                                </strong>
+							        <fmt:formatNumber value="${order.orderPrice}" type="number"/>원
+							    </strong>
                             </td>
                             <td style="font-size: 13px; color: #666;">${order.orderDate}</td>
                         </tr>

@@ -88,7 +88,7 @@ public class SecurityConfig {
                     Authentication authentication) throws IOException, ServletException {
                 
                 String mid = authentication.getName();
-                System.out.println("====== 🍪 [진짜 관제탑] 대철이의 쿠키 마이그레이션 진입 성공 유저: " + mid + " ======");
+                System.out.println("====== 🍪 [폼 로그인 수신] 쿠키 마이그레이션 진입 성공 유저: " + mid + " ======");
 
                 Cookie[] cookies = request.getCookies();
                 if (cookies != null) {
@@ -98,59 +98,48 @@ public class SecurityConfig {
                                 String cartJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
                                 System.out.println("▶ [디버깅] 추출된 순수 쿠키 문자열: " + cartJson);
                                 
-                                // 대철이의 순수 자바 문자열 슬라이싱 알고리즘 보정 버전
-                                String cleanJson = cartJson.replace("[", "").replace("]", "").replace("{", "").replace("}", "");
+                                // 카카오 로그인과 동일하게 가장 안전하고 직관적인 괄호 정리 기법 적용
+                                String cleanJson = cartJson.replace("[", "").replace("]", "");
+                                String[] items = cleanJson.split("\\},\\s*\\{");
                                 
-                                if (!cleanJson.trim().isEmpty()) {
-                                    // 역슬래시나 인코딩 유실에 대비해 콤마 전체를 유연하게 쪼개도록 수정
-                                    String[] items = cleanJson.split("},?\\s*{?"); 
-                                    if(items.length == 1) {
-                                        items = cleanJson.split(",");
-                                    }
-                                    
+                                for (String item : items) {
+                                    String refinedItem = item.replace("{", "").replace("}", "");
+                                    String[] subParts = refinedItem.split(",");
                                     int bookId = 0;
                                     int count = 0;
                                     
-                                    for (String item : items) {
-                                        // 정밀 숫자가 파싱되는지 로깅
-                                        System.out.println("▶ [디버깅] 쪼개진 단일 아이템 파트: " + item);
-                                        
-                                        String[] subParts = item.split(",");
-                                        for(String part : subParts) {
-                                            if(part.contains("bookId")) {
-                                                // 문자열에서 숫자만 쏙 발라내기 기법 적용
-                                                bookId = Integer.parseInt(part.replaceAll("[^0-9]", ""));
-                                            } else if(part.contains("count")) {
-                                                count = Integer.parseInt(part.replaceAll("[^0-9]", ""));
-                                            }
+                                    for(String part : subParts) {
+                                        if(part.contains("bookId")) {
+                                            bookId = Integer.parseInt(part.replaceAll("[^0-9]", "").trim());
+                                        } else if(part.contains("count")) {
+                                            count = Integer.parseInt(part.replaceAll("[^0-9]", "").trim());
                                         }
-                                        
-                                        if (bookId > 0 && count > 0) {
-                                            CartVO cartVO = CartVO.builder()
-                                                                  .memberId(mid)
-                                                                  .bookId(bookId)
-                                                                  .count(count)
-                                                                  .build();
-                                            cartService.addCart(cartVO); 
-                                            System.out.println("⭕ [이사 성공] DB 꽂힘 완료: 책번호 " + bookId + " | 수량 " + count);
-                                        }
+                                    }
+                                    
+                                    if (bookId > 0 && count > 0) {
+                                        CartVO cartVO = CartVO.builder()
+                                                              .memberId(mid)
+                                                              .bookId(bookId)
+                                                              .count(count)
+                                                              .build();
+                                        cartService.addCart(cartVO); 
+                                        System.out.println("⭕ [폼 로그인 이사 성공] DB 꽂힘 완료: 책번호 " + bookId + " | 수량 " + count);
                                     }
                                 }
                             } catch (Exception e) {
-                                System.out.println("❌ 쿠키 연동 파싱 예외: " + e.getMessage());
+                                System.out.println("❌ 폼 로그인 쿠키 연동 파싱 예외: " + e.getMessage());
                                 e.printStackTrace();
                             }
                             
-                            // 이사가 무사히 수행되었든 아니든 처리가 끝나면 무조건 브라우저 쿠키는 증발시킵니다.
+                            // 처리가 완료되면 브라우저 쿠키 소멸 명령
                             cookie.setValue("");
                             cookie.setPath("/");
                             cookie.setMaxAge(0);
                             response.addCookie(cookie);
-                            System.out.println("🧹 브라우저 guestCart 쿠키 삭제 명령 전송 완료!");
+                            System.out.println("🧹 브라우저 guestCart 쿠키 삭제 완료!");
                         }
                     }
                 }
-                
                 response.sendRedirect(request.getContextPath() + "/order/cart");
             }
         };

@@ -88,6 +88,6 @@ public class MemberDAOH2 implements MemberDAO {
 	@Override
 	public MemberVO selectById(String memberId) {
 		// 인터페이스 규격을 맞추기 위해 findById와 동일한 로직을 수행하도록 연결합니다.
-		return findById(memberId);
+		return this.findById(memberId);
 	}
 }

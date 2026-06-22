@@ -46,11 +46,6 @@ public class BookController {
 	// 2. 도서 등록 폼 (관리자 권한 체크 로직 유지)
 	@RequestMapping(value = "insertform", method = RequestMethod.GET)
 	public String insertform(Model model, HttpSession session) {
-		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-
-		if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-			return "redirect:/book/list";
-		}
 
 		model.addAttribute("contentPage", "/WEB-INF/views/book/insertform.jsp");
 		return "layout/layout";
@@ -93,13 +88,8 @@ public class BookController {
 	}
 
 	// 5. 수정 및 삭제 (관리자 권한 체크 포함)
-	@RequestMapping(value = "update", method = RequestMethod.GET)
+	@RequestMapping(value = "updateform", method = RequestMethod.GET)
 	public ModelAndView updateform(int id, HttpSession session) {
-		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-
-		if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-			return new ModelAndView("redirect:/book/list");
-		}
 
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("bk", service.getBook(id));
@@ -121,11 +111,6 @@ public class BookController {
 	
 	@RequestMapping("delete")
 	public String delete(@RequestParam("id") int id, RedirectAttributes ra, HttpSession session) {
-		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-
-		if (loginUser == null || !"ADMIN".equals(loginUser.getRole())) {
-			return "redirect:/book/list";
-		}
 
 		ra.addFlashAttribute("kind", "delete");
 		if(service.delete(id)) {
