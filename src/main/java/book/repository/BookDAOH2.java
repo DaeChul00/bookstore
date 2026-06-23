@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import book.model.BookVO;
+import book.model.ReviewVO;
 
 @Repository
 public class BookDAOH2 implements BookDAO{
@@ -63,35 +64,43 @@ public class BookDAOH2 implements BookDAO{
 
 	@Override
 	public BookVO findById(int id) {
-		String sql = "SELECT * FROM BOOK WHERE ID = ?";
-	       
-	       try (PreparedStatement ps = conn.prepareStatement(sql)) {
-	           
-	           ps.setInt(1, id);
-	           ResultSet rs = ps.executeQuery();
-	           
-	           if (rs.next()) {
-	               BookVO book = new BookVO();
-
-	               book.setId(rs.getInt("ID"));
-	               book.setIsbn(rs.getString("ISBN"));
-	               book.setTitle(rs.getString("TITLE"));
-	               book.setAuthor(rs.getString("AUTHOR"));
-	               book.setPublisher(rs.getString("PUBLISHER"));
-	               book.setPublictiondate(rs.getString("PUBLICTIONDATE"));
-	               book.setPrice(rs.getInt("PRICE"));
-	               book.setBookimage(rs.getString("BOOKIMAGE"));
-	               book.setContent(rs.getString("CONTENT"));
-	               book.setRating(rs.getFloat("RATING"));
-	                   
-	               return book;
-	           }
-	           
-	       } catch (Exception e) {
-	           e.printStackTrace();
-	       }
-	       
-	       return null;
+BookVO book = null;
+		
+		// 🎯 [서브쿼리 방식으로 변경] b.*의 모든 컬럼을 안전하게 가져오면서 평점과 개수를 정확하게 집계합니다.
+		String sql = "SELECT b.*, " +
+		             "       (SELECT COALESCE(AVG(r.RATING), 0.0) FROM REVIEW r WHERE r.BOOK_ID = b.ID) AS AVG_RATING, " +
+		             "       (SELECT COUNT(r.REVIEW_ID) FROM REVIEW r WHERE r.BOOK_ID = b.ID) AS REVIEW_COUNT " +
+		             "FROM BOOK b " +
+		             "WHERE b.ID = ?";
+		
+		try (PreparedStatement ps = conn.prepareStatement(sql)) {
+			ps.setInt(1, id);
+			try (ResultSet rs = ps.executeQuery()) {
+				if (rs.next()) {
+					book = BookVO.builder()
+						.id(rs.getInt("ID"))
+						.isbn(rs.getString("ISBN"))
+						.title(rs.getString("TITLE"))
+						.author(rs.getString("AUTHOR"))
+						.publisher(rs.getString("PUBLISHER"))
+						.publictiondate(rs.getString("PUBLICTIONDATE"))
+						.price(rs.getInt("PRICE"))
+						.content(rs.getString("CONTENT"))
+						.bookimage(rs.getString("BOOKIMAGE"))
+						.rating(rs.getFloat("RATING"))
+						
+						// 🚨 대소문자가 정확히 맞는지 다시 한번 확인합니다.
+						.avgRating(Math.round(rs.getDouble("AVG_RATING") * 10) / 10.0)
+						.reviewCount(rs.getInt("REVIEW_COUNT"))
+						
+						.build();
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return book;
 	}
 
 	@Override
@@ -235,36 +244,118 @@ public class BookDAOH2 implements BookDAO{
 	    return list;
 	}
 	
-	public List<BookVO> getBestBooks() {
-	    List<BookVO> list = new ArrayList<>();
-	    
-	    String sql = "SELECT b.*, " +
-	                 "       COALESCE(AVG(r.RATING), 0.0) AS AVG_RATING, " +
-	                 "       COUNT(r.REVIEW_ID) AS REVIEW_COUNT " +
-	                 "FROM BOOK b " +
-	                 "LEFT JOIN REVIEW r ON b.ID = r.BOOK_ID " +
-	                 "GROUP BY b.ID, b.TITLE, b.BOOKIMAGE, b.PRICE, b.AUTHOR " + // 👈 여기 수정
-	                 "ORDER BY AVG_RATING DESC";
-	    
-	    try (PreparedStatement ps = conn.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
-	        
-	        while (rs.next()) {
-	            list.add(BookVO.builder()
-	                .id(rs.getInt("ID"))
-	                .title(rs.getString("TITLE"))
-	                .author(rs.getString("AUTHOR"))
-	                .price(rs.getInt("PRICE"))
-	                .bookimage(rs.getString("BOOKIMAGE")) // 👈rs 데이터 추출 이름도 통일
-	                
-	                .avgRating(Math.round(rs.getDouble("AVG_RATING") * 10) / 10.0)
-	                .reviewCount(rs.getInt("REVIEW_COUNT"))
-	                .build());
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	    }
-	    return list;
-	}
+	// 🎯 1. 메인화면/추천목록용 실시간 평점 리스트 조회
+	@Override
+    public List<BookVO> getBestBooks() {
+        List<BookVO> list = new ArrayList<>();
+        String sql = "SELECT b.*, " +
+                     "       COALESCE(AVG(r.RATING), 0.0) AS AVG_RATING, " +
+                     "       COUNT(r.REVIEW_ID) AS REVIEW_COUNT " +
+                     "FROM BOOK b " +
+                     "LEFT JOIN REVIEW r ON b.ID = r.BOOK_ID " +
+                     "GROUP BY b.ID, b.TITLE, b.BOOKIMAGE, b.PRICE, b.AUTHOR " +
+                     "ORDER BY AVG_RATING DESC";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(BookVO.builder()
+                    .id(rs.getInt("ID"))
+                    .title(rs.getString("TITLE"))
+                    .author(rs.getString("AUTHOR"))
+                    .price(rs.getInt("PRICE"))
+                    .bookimage(rs.getString("BOOKIMAGE"))
+                    .avgRating(Math.round(rs.getDouble("AVG_RATING") * 10) / 10.0)
+                    .reviewCount(rs.getInt("REVIEW_COUNT"))
+                    .build());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+	// 🎯 2. 상세페이지용 실시간 평점 포함 도서 단건 조회
+	@Override
+    public BookVO getBook(int id) {
+        BookVO book = null;
+        String sql = "SELECT b.*, " +
+                     "       COALESCE(AVG(r.RATING), 0.0) AS AVG_RATING, " +
+                     "       COUNT(r.REVIEW_ID) AS REVIEW_COUNT " +
+                     "FROM BOOK b " +
+                     "LEFT JOIN REVIEW r ON b.ID = r.BOOK_ID " +
+                     "WHERE b.ID = ? " +
+                     "GROUP BY b.ID, b.TITLE, b.AUTHOR, b.PUBLISHER, b.PUBLICTIONDATE, b.PRICE, b.CONTENT, b.BOOKIMAGE, b.RATING";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    book = BookVO.builder()
+                        .id(rs.getInt("ID"))
+                        .isbn(rs.getString("ISBN"))
+                        .title(rs.getString("TITLE"))
+                        .author(rs.getString("AUTHOR"))
+                        .publisher(rs.getString("PUBLISHER"))
+                        .publictiondate(rs.getString("PUBLICTIONDATE"))
+                        .price(rs.getInt("PRICE"))
+                        .content(rs.getString("CONTENT"))
+                        .bookimage(rs.getString("BOOKIMAGE"))
+                        .rating(rs.getFloat("RATING"))
+                        .avgRating(Math.round(rs.getDouble("AVG_RATING") * 10) / 10.0)
+                        .reviewCount(rs.getInt("REVIEW_COUNT"))
+                        .build();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return book;
+    }
+
+	// 🎯 3. 상세페이지용 해당 도서의 전체 리뷰 리스트 최신순 조회
+    @Override
+    public List<ReviewVO> getReviewsByBookId(int bookId) {
+        List<ReviewVO> list = new ArrayList<>();
+        String sql = "SELECT * FROM REVIEW WHERE BOOK_ID = ? ORDER BY REVIEW_ID DESC";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, bookId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(ReviewVO.builder()
+                        .reviewId(rs.getInt("REVIEW_ID"))
+                        .bookId(rs.getInt("BOOK_ID"))
+                        .memberId(rs.getString("MEMBER_ID"))
+                        .rating(rs.getInt("RATING"))
+                        .content(rs.getString("CONTENT"))
+                        .regDate(rs.getString("REG_DATE"))
+                        .build());
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    
+    @Override
+    public boolean hasAlreadyReviewed(int bookId, String memberId) {
+        String sql = "SELECT COUNT(*) FROM REVIEW WHERE BOOK_ID = ? AND MEMBER_ID = ?";
+        
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, bookId);
+            ps.setString(2, memberId);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    // 카운트가 0보다 크면 이미 리뷰를 작성한 것입니다.
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 	
 }

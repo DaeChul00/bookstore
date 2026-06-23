@@ -15,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import book.model.BookVO;
+import book.model.ReviewVO;
 import book.service.BookService;
 import member.model.MemberVO;
 
@@ -83,7 +84,14 @@ public class BookController {
 	@RequestMapping("view")
 	public ModelAndView view(int id) {
 		ModelAndView mv = new ModelAndView();
+		
+		// 실시간 평점이 조인된 도서 단건 정보
 		mv.addObject("bk", service.getBook(id));
+		
+		// 🎯 [추가] 해당 도서에 달린 실시간 리뷰 전체 목록
+		List<ReviewVO> reviewList = service.getReviewsByBookId(id);
+		mv.addObject("reviewList", reviewList);
+		
 		mv.addObject("contentPage", "/WEB-INF/views/book/view.jsp");
 		mv.setViewName("layout/layout");
 		return mv;

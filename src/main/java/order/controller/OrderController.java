@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import book.service.BookService;
 import order.model.CartVO;
 import order.model.OrderVO;
 import order.service.CartService;
@@ -23,6 +24,9 @@ import member.model.MemberVO;
 public class OrderController {
 
     @Autowired
+    private BookService bookService;
+    
+	@Autowired
     private CartService cartService;
 
     @Autowired
@@ -109,27 +113,30 @@ public class OrderController {
         
         return "layout/layout";
     }
-
-    // 7. 비동기 Ajax 리뷰 등록 처리 API
-    @RequestMapping(value = "/review-insert", method = RequestMethod.POST)
+    
+    //중복 리뷰 처리
     @ResponseBody
-    public String insertReview(
-            @RequestParam("bookId") int bookId,
-            @RequestParam("rating") int rating,
-            @RequestParam("content") String content,
-            HttpSession session) {
-        
-        System.out.println(">>> [리뷰등록 API] 넘어온 bookId  : " + bookId);
-        System.out.println(">>> [리뷰등록 API] 넘어온 rating  : " + rating);
-        System.out.println(">>> [리뷰등록 API] 넘어온 content : " + content);
-        
-        MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
-        if (loginUser == null) {
-            return "login_required";
-        }
-        
-        boolean isSuccess = reviewService.addReview(bookId, loginUser.getMemberId(), rating, content);
-        
-        return isSuccess ? "success" : "fail";
-    }
+	@RequestMapping(value = "review-insert", method = RequestMethod.POST)
+	public String insertReview(@RequestParam("bookId") int bookId,
+	                           @RequestParam("rating") int rating,
+	                           @RequestParam("content") String content,
+	                           HttpSession session) {
+		
+		// 1. 로그인 체크
+		MemberVO loginUser = (MemberVO) session.getAttribute("loginUser");
+		if (loginUser == null) {
+			return "login_required";
+		}
+		
+		// 2. 중복 체크 가드 로직
+		boolean isDuplicate = bookService.hasAlreadyReviewed(bookId, loginUser.getMemberId());
+		if (isDuplicate) {
+			return "already_exists";
+		}
+		
+		// 3. 서비스 호출 (bookId, memberId, rating, content 순서 일치 확인)
+		boolean result = reviewService.addReview(bookId, loginUser.getMemberId(), rating, content);
+		
+		return result ? "success" : "fail";
+	}
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import book.model.BookVO;
+import book.model.ReviewVO;
 import book.repository.BookDAO;
 
 @Service
@@ -45,5 +46,12 @@ public class BookService {
 	public List<BookVO> getBestBooks() {
 	    return dao.getBestBooks();
 	}
+	public List<ReviewVO> getReviewsByBookId(int bookId) {
+	    return dao.getReviewsByBookId(bookId);
+	}
+	
+	public boolean hasAlreadyReviewed(int bookId, String memberId) {
+		return dao.hasAlreadyReviewed(bookId, memberId);
+	};
 
 }

@@ -124,57 +124,55 @@
 		$("#reviewModal, #modalBg").show();
 	}
 
-	$(document)
-			.ready(
-					function() {
-						$("#closeModalBtn, #modalBg").on("click", function() {
-							$("#reviewModal, #modalBg").hide();
-							$("#reviewForm")[0].reset();
-						});
+	$(document).ready(function() {
+		// 모달 닫기 이벤트
+		$("#closeModalBtn, #modalBg").on("click", function() {
+			$("#reviewModal, #modalBg").hide();
+			$("#reviewForm")[0].reset();
+		});
 
-						$("#reviewForm")
-								.on(
-										"submit",
-										function(e) {
-											e.preventDefault();
+		// 폼 제출 이벤트 (여기에 하나로 깔끔하게 통합합니다)
+		$("#reviewForm").on("submit", function(e) {
+			e.preventDefault();
 
-											let content = $(
-													"textarea[name='content']")
-													.val();
-											if (content.trim().length < 10) {
-												alert("리뷰 내용을 10자 이상 적어주세요.");
-												return;
-											}
+			let content = $("textarea[name='content']").val();
+			if (content.trim().length < 10) {
+				alert("리뷰 내용을 10자 이상 적어주세요.");
+				return;
+			}
 
-											let formData = $(this).serialize();
+			let formData = $(this).serialize();
 
-											$
-													.ajax({
-														url : "${pageContext.request.contextPath}/order/review-insert",
-														type : "POST",
-														data : formData,
-														success : function(
-																response) {
-															if (response === "success") {
-																alert("리뷰가 성공적으로 등록되었습니다!");
-																$(
-																		"#reviewModal, #modalBg")
-																		.hide();
-																$("#reviewForm")[0]
-																		.reset();
-																location
-																		.reload();
-															} else if (response === "login_required") {
-																alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
-																location.href = "${pageContext.request.contextPath}/login";
-															} else {
-																alert("리뷰 등록에 실패했습니다. 다시 시도해 주세요.");
-															}
-														},
-														error : function() {
-															alert("서버 통신 에러가 발생했습니다.");
-														}
-													});
-										});
-					});
+			$.ajax({
+				url : "${pageContext.request.contextPath}/order/review-insert",
+				type : "POST",
+				data : formData,
+				success : function(response) {
+					let res = response.trim(); // 공백 제거 후 비교
+					
+					if (res === "success") {
+						alert("리뷰가 성공적으로 등록되었습니다!");
+						$("#reviewModal, #modalBg").hide();
+						$("#reviewForm")[0].reset();
+						location.reload();
+					} 
+					else if (res === "already_exists") {
+						alert("❌ 이미 해당 도서에 대한 리뷰를 작성하셨습니다. (도서당 1회만 작성 가능)");
+						$("#reviewModal, #modalBg").hide();
+						$("#reviewForm")[0].reset();
+					} 
+					else if (res === "login_required") {
+						alert("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+						location.href = "${pageContext.request.contextPath}/login";
+					} 
+					else {
+						alert("리뷰 등록에 실패했습니다. 다시 시도해 주세요.");
+					}
+				},
+				error : function() {
+					alert("서버 통신 에러가 발생했습니다.");
+				}
+			});
+		});
+	});
 </script>
