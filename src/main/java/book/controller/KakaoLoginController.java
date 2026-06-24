@@ -40,7 +40,8 @@ public class KakaoLoginController {
 
     private static final String CLIENT_ID = "6d56b80b09849d754df794b8ae017307";
     private static final String CLIENT_SECRET = "k16pKYIwdh9UfS551SqEYYYKhcefmleW";
-    private static final String REDIRECT_URI = "http://localhost:8888/kakao/callback";
+    private static final String REDIRECT_URI =
+    	    "https://upriver-grope-equate.ngrok-free.dev/kakao/callback";
 
     @GetMapping("/kakao/login")
     public String kakaoLogin() {

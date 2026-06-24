@@ -2,6 +2,7 @@ package cs.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.core.Authentication;
 
 import cs.model.CsVO;
 import cs.service.CsService;
@@ -48,14 +50,25 @@ public class CsController {
         return mv;
     }
 
-    // 등록 처리
     @RequestMapping("insert")
-    public String insert(@ModelAttribute CsInsertVO ics, RedirectAttributes ra) {
+    public String insert(@ModelAttribute CsInsertVO ics,
+                         RedirectAttributes ra,
+                         Authentication authentication) {
+
         CsVO cv = new CsVO();
+
+        // CsInsertVO -> CsVO 복사
         BeanUtils.copyProperties(ics, cv);
 
+        // 로그인한 사용자 아이디 저장
+        if (authentication != null) {
+            cv.setUserName(authentication.getName());
+        }
+
         ra.addFlashAttribute("kind", "insert");
+
         boolean success = service.insert(cv);
+
         ra.addFlashAttribute("message", success ? "success" : "fail");
 
         return "redirect:/cs/csList";

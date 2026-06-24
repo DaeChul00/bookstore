@@ -92,4 +92,8 @@ public class MemberServiceImpl implements MemberService {
 				.authorities(new SimpleGrantedAuthority("ROLE_" + member.getRole()))
 				.build();
 	}
+	
+	public MemberVO findByEmail(String email) {
+	    return memberDAO.findByEmail(email);
+	}
 }

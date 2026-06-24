@@ -23,7 +23,7 @@ public class StatDAOH2 implements StatDAO{
 	@Override
 	public List<Map<String, Object>> getDailySales() {
 		// 최근 7일간의 날짜별 총 매출액 합계
-	    String sql = "SELECT FORMATDATETIME(order_date, 'yyyy-MM-dd') as date, SUM(order_price * count) as total_sales " +
+	    String sql = "SELECT FORMATDATETIME(order_date, 'yyyy-MM-dd') as date, SUM(order_price) as total_sales " +
 	                 "FROM ORDERS GROUP BY date ORDER BY date DESC LIMIT 7";
 	    return jdbcTemplate.queryForList(sql);
 	}

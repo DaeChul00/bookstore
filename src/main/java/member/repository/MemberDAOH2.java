@@ -90,4 +90,21 @@ public class MemberDAOH2 implements MemberDAO {
 		// 인터페이스 규격을 맞추기 위해 findById와 동일한 로직을 수행하도록 연결합니다.
 		return this.findById(memberId);
 	}
+	
+	public MemberVO findByEmail(String email) {
+	    String sql = "SELECT * FROM MEMBER WHERE EMAIL = ?";
+
+	    try {
+	        return jdbcTemplate.queryForObject(
+	            sql,
+	            new BeanPropertyRowMapper<>(MemberVO.class),
+	            email
+	        );
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
+	
+	
+	
 }

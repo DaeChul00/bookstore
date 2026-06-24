@@ -1,24 +1,47 @@
-/* ���� ��Ʈ (Pretendard ��õ �Ǵ� ��������) */
+/* 기본 폰트 (Pretendard 추천) */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 :root {
-    --kb-green: #005a32;      /* ���� �ñ״�ó �׸� */
-    --kb-light-green: #eef7f2; /* ���� ���� �׸� */
-    --kb-border: #e8e8e8;     /* ���м� ���� */
-    --kb-text: #333333;       /* �⺻ �ؽ�Ʈ */
-    --kb-sub-text: #767676;   /* ���� �ؽ�Ʈ */
+    --kb-green: #005a32;
+    --kb-light-green: #eef7f2;
+    --kb-border: #e8e8e8;
+    --kb-text: #333333;
+    --kb-sub-text: #767676;
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
-body { background-color: #fff; color: var(--kb-text); line-height: 1.6; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Pretendard', sans-serif;
+}
 
-.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+body {
+    background-color: #fff;
+    color: var(--kb-text);
+    line-height: 1.6;
+}
 
-/* ���̾ƿ� ���� */
-.wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-main { flex: 1; padding: 60px 0; background-color: #fdfdfd; }
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
 
-/* ��ư ��Ÿ�� */
+/* 레이아웃 */
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
+    padding: 60px 0;
+    background-color: #fdfdfd;
+}
+
+/* 버튼 */
 .btn-kb {
     background-color: var(--kb-green);
     color: white;
@@ -28,28 +51,33 @@ main { flex: 1; padding: 60px 0; background-color: #fdfdfd; }
     font-weight: 500;
     cursor: pointer;
 }
+
+.search-box {
+    flex: 0 0 400px;
+}
+
 .search-box input::placeholder {
     color: #aaa;
     transition: 0.3s;
 }
-.search-box {
-    flex: 0 0 400px;  /* 줄어들지 않음 */
+
+.search-box input:focus::placeholder {
+    opacity: 0.5;
 }
+
 .section a:hover {
     text-decoration: underline;
 }
-.search-box input:focus::placeholder {
-    opacity: 0.5;
-} 
-/* ���̺� ���(th)�� ������ ��� ���� */
+
 th {
     text-align: center !important;
     vertical-align: middle !important;
 }
 
-/* ������ �κ�(td)�� ��� �����ϰ� �ʹٸ� �Ʒ� �ּ��� �����ϼ��� */
-/* td {
+/* td 가운데 정렬 필요하면 사용 */
+/*
+td {
     text-align: center;
     vertical-align: middle;
-} 
+}
 */

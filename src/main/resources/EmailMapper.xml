@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="member.repository.EmailDAO">
+
+    <insert id="saveAuthCode">
+        INSERT INTO email_auth(email, auth_code)
+        VALUES(#{email}, #{authCode})
+    </insert>
+
+    <select id="findByEmail"
+            parameterType="String"
+            resultType="member.model.EmailAuthVO">
+        SELECT *
+        FROM email_auth
+        WHERE email = #{email}
+    </select>
+
+    <update id="verifyEmail">
+        UPDATE email_auth
+        SET verified = 'Y'
+        WHERE email = #{email}
+    </update>
+
+</mapper>
