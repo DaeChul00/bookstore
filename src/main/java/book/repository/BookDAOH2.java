@@ -179,17 +179,31 @@ BookVO book = null;
 
 	    //2. keyword 있을 때만 WHERE 추가
 	    if (keyword != null && !keyword.trim().isEmpty()) {
-	        sql.append(" WHERE ").append(category).append(" LIKE ?");
+
+	        sql.append(" WHERE ")
+	           .append(category)
+	           .append(" LIKE ? ");
+
+	        sql.append(" ORDER BY CASE ")
+	           .append(" WHEN ")
+	           .append(category)
+	           .append(" LIKE ? THEN 0 ")
+	           .append(" ELSE 1 ")
+	           .append(" END, TITLE ");
+
+	        sql.append(" LIMIT 6");
+
+	    } else {
+
+	        sql.append(" ORDER BY ID DESC");
 	    }
-
-	    sql.append(" ORDER BY ID DESC");
-
 	    try (PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
 	        //3. 파라미터 세팅
-	        if (keyword != null && !keyword.trim().isEmpty()) {
-	            ps.setString(1, "%" + keyword + "%");
-	        }
+	    	if (keyword != null && !keyword.trim().isEmpty()) {
+	    	    ps.setString(1, "%" + keyword + "%");
+	    	    ps.setString(2, keyword + "%");
+	    	}
 
 	        try (ResultSet rs = ps.executeQuery()) {
 	            while (rs.next()) {

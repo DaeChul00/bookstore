@@ -73,10 +73,10 @@
 .search-preview {
 	width: 50%;
 	padding: 20px;
+	margin: auto;
 	text-align: center;
 	background: #f8f8f8;
 }
-
 .search-preview img {
 	width: 150px;
 	height: 220px;
@@ -133,9 +133,9 @@
 				<div id="searchList" class="search-left"></div>
 
 				<div class="search-preview">
-
+	
 					<img id="previewImage" src="" style="display: none;">
-
+				  
 					<div class="preview-title"></div>
 
 					<div class="preview-author"></div>
