@@ -28,6 +28,10 @@ public class BookController {
 	    model.addAttribute("topRatedList", service.getTopRatedBooks());
 	    model.addAttribute("newBookList", service.getNewBooks());
 	    model.addAttribute("contentPage", "/WEB-INF/views/main.jsp");
+	    
+	    // 메인 페이지에서만 배너 표시
+	    model.addAttribute("showBanner", true);
+	    
 	    return "layout/layout";
 	}
 

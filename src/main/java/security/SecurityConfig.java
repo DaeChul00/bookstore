@@ -59,7 +59,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     "/",
                     "/signup",
                     "/login",
-                    "/email/**",       // ★ 이메일 인증 허용
+                    "/email/**",       //  이메일 인증 허용
                     "/book/**",
                     "/kakao/**",
                     "/css/**",
@@ -89,11 +89,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
             .and()
 
-            .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/book/list")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID");
+            
+        
+		        .logout()
+		        .logoutUrl("/logout")
+		        .logoutSuccessUrl("/book/list")
+		        .invalidateHttpSession(true)
+		        .deleteCookies("JSESSIONID")
+		        .clearAuthentication(true);
+        
     }
 
     @Bean

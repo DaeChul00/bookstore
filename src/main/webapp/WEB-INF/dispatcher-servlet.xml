@@ -18,7 +18,8 @@
     intercepter, 
     email.controller,
     email.service,
-    email.repository" />
+    email.repository,
+    kakaoLogin"/>
 
 	<bean id="viewResolver"
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver">

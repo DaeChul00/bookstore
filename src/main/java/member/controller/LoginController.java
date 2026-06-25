@@ -1,5 +1,6 @@
 package member.controller;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -30,12 +31,7 @@ public class LoginController {
         return "layout/layout";
     }
 
-	// 2. 로그아웃 처리 (GET)
-	@GetMapping("/logout")
-	public String logout(HttpSession session) {
-		session.invalidate();
-		return "redirect:/book";
-	}
+	
 
 	@RequestMapping("/test-login")
 	public String checkLogin(HttpServletRequest request, HttpServletResponse response) {
