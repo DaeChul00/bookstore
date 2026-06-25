@@ -101,4 +101,34 @@ public class OrderDAOH2 {
             return ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); return 0; }
     }
+    //실시간 업데이트
+    public String getDeliveryStatus(int orderId) {
+        String sql = "SELECT delivery_status FROM ORDERS WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getString("delivery_status");
+        } catch (SQLException e) { e.printStackTrace(); }
+        return "정보없음";
+    }
+    //실시간 상세정보
+    public OrderVO getOrderById(int orderId) {
+        String sql = "SELECT * FROM ORDERS WHERE order_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return OrderVO.builder()
+                    .orderId(rs.getInt("order_id"))
+                    .title(rs.getString("title"))
+                    .count(rs.getInt("count"))
+                    .orderPrice(rs.getInt("order_price"))
+                    .bookimage(rs.getString("bookimage"))
+                    .orderDate(rs.getString("order_date"))
+                    .deliveryStatus(rs.getString("delivery_status"))
+                    .build();
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
 }

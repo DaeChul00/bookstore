@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import order.model.CartVO;
@@ -100,4 +101,22 @@ public class OrderController {
         return (memberId != null) ? memberId : "user01";
     }
     
+    //실시간 업데이트
+    @RequestMapping(value = "/status", produces = "text/plain; charset=UTF-8")
+    @ResponseBody
+    public String getOrderStatus(@RequestParam int orderId) {
+        return orderService.getOrderStatus(orderId);
+    }
+    //실시간 상세정보
+    @RequestMapping("/detail")
+    public String orderDetail(@RequestParam int orderId, Model model) {
+        // 1. OrderService에 해당 orderId의 정보를 가져오는 메서드(getOrderById)가 있어야 합니다.
+        OrderVO order = orderService.getOrderById(orderId);
+        
+        // 2. 조회된 정보를 'order'라는 이름으로 JSP에 전달
+        model.addAttribute("order", order); 
+        
+        model.addAttribute("contentPage", "/WEB-INF/views/order/order_detail.jsp");
+        return "layout/layout";
+    }
 }

@@ -32,7 +32,11 @@
                             <td style="padding: 15px;">
                                 <img src="${order.bookimage}" style="width: 80px; height: 110px; object-fit: cover; border: 1px solid #ddd;">
                             </td>
-                            <td style="text-align: left; padding: 15px; font-weight: bold;">${order.title}</td>
+                            <td style="text-align: left; padding: 15px; font-weight: bold;">
+							    <a href="${pageContext.request.contextPath}/order/detail?orderId=${order.orderId}">
+							        ${order.title}
+							    </a>
+							</td>
                             <td>${order.count}권</td>
                             <td>
                                 <strong style="color: #d9534f;">
@@ -42,17 +46,10 @@
                             <td style="font-size: 13px; color: #666;">${order.orderDate}</td>
                             
                             <td>
-                                <c:choose>
-                                    <c:when test="${order.deliveryStatus eq '배송완료'}">
-                                        <span class="badge bg-success" style="font-size: 13px; padding: 6px 12px;">배송완료</span>
-                                    </c:when>
-                                    <c:when test="${order.deliveryStatus eq '배송중'}">
-                                        <span class="badge bg-info text-white" style="font-size: 13px; padding: 6px 12px;">배송중</span>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="badge bg-secondary" style="font-size: 13px; padding: 6px 12px;">${order.deliveryStatus}</span>
-                                    </c:otherwise>
-                                </c:choose>
+                                <span id="status-${order.orderId}" class="badge ${order.deliveryStatus eq '배송완료' ? 'bg-success' : (order.deliveryStatus eq '배송중' ? 'bg-info text-white' : 'bg-secondary')}" 
+                                      style="font-size: 13px; padding: 6px 12px;">
+                                    ${order.deliveryStatus}
+                                </span>
                             </td>
                         </tr>
                     </c:forEach>
@@ -68,3 +65,22 @@
         </a>
     </div>
 </div>
+
+<script>
+    setInterval(function() {
+        // 주문 리스트가 여러 개일 경우 각 주문의 상태만 갱신
+        document.querySelectorAll('[id^="status-"]').forEach(el => {
+            const orderId = el.id.split('-')[1]; // status-123에서 123 추출
+            
+            fetch('${pageContext.request.contextPath}/order/status?orderId=' + orderId)
+            .then(response => response.text())
+            .then(data => {
+                console.log("받은 데이터:", data); // F12 개발자도구 콘솔에서 한글이 잘 나오는지 확인!
+                if (el.innerText !== data) {
+                    el.innerText = data; // 여기서 ????가 나오는지 확인
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    }, 5000);
+</script>

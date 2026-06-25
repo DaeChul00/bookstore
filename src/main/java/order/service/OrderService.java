@@ -23,13 +23,14 @@ public class OrderService {
 	public void processOrder(String memberId, List<CartVO> cartList) {
 		for (CartVO cart : cartList) {
 			OrderVO order = OrderVO.builder()
-					.memberId(memberId)
-					.bookId(cart.getBookId())
-					.title(cart.getTitle())
-					.count(cart.getCount())
-					.orderPrice(cart.getPrice())
-					.bookimage(cart.getBookimage())
-					.build();
+			        .memberId(memberId)
+			        .bookId(cart.getBookId())
+			        .title(cart.getTitle())
+			        .count(cart.getCount())
+			        .orderPrice(cart.getPrice())
+			        .bookimage(cart.getBookimage())
+			        .deliveryStatus("결제완료") // ◀ 주문 시 기본값
+			        .build();
 			orderDao.insertOrder(order);
 		}
 		cartDao.deleteByMemberId(memberId);
@@ -37,5 +38,13 @@ public class OrderService {
 
 	public List<OrderVO> getOrderList(String memberId) {
 		return orderDao.findOrdersByMemberId(memberId);
+	}
+	
+	public String getOrderStatus(int orderId) {
+	    return orderDao.getDeliveryStatus(orderId);
+	}
+	
+	public OrderVO getOrderById(int orderId) {
+	    return orderDao.getOrderById(orderId);
 	}
 }

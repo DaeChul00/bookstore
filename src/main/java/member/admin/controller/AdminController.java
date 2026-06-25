@@ -102,6 +102,6 @@ public class AdminController {
     @RequestMapping("/order/updateStatus")
     public String updateDeliveryStatus(@RequestParam int orderId, @RequestParam String deliveryStatus) {
     	orderDAOH2.updateDeliveryStatus(orderId, deliveryStatus);
-        return "redirect:/order/list"; // 수정 완료 후 관리자 목록으로 리다이렉트
+        return "redirect:/admin/order/list"; // 수정 완료 후 관리자 목록으로 리다이렉트
     }
 }
