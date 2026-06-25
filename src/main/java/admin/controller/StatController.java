@@ -16,21 +16,16 @@ public class StatController {
 	
 	@GetMapping("/stat/sales")
     public String getSalesStats(Model model) {
-        // 출판사별 통계 데이터
-        model.addAttribute("publisherStats", statService.getPublisherStats());
-        
-        // 일별 판매량
-        model.addAttribute("dailySales", statService.getDailySales());
-        
-        // 베스트셀러
-        model.addAttribute("bestSellers", statService.getBestSellers());
-        
-        // 평점 TOP 5 도서 데이터
-        model.addAttribute("topBooks", statService.getTopRatedBooks());
-        
-        model.addAttribute("contentPage", "/WEB-INF/views/admin/sales-stats.jsp");
-        
-        // WEB-INF/views/admin/sales-stats.jsp로 이동
-        return "layout/layout";
+		model.addAttribute("publisherStats", statService.getPublisherStats());
+	    model.addAttribute("dailySales", statService.getDailySales());
+	    model.addAttribute("weeklySales", statService.getWeeklySales()); // 추가
+	    model.addAttribute("monthlySales", statService.getMonthlySales());
+	    model.addAttribute("yearlySales", statService.getYearlySales());
+	    model.addAttribute("publisherSales", statService.getPublisherSales());
+	    model.addAttribute("bestSellers", statService.getBestSellers());
+	    model.addAttribute("topBooks", statService.getTopRatedBooks());
+	    
+	    model.addAttribute("contentPage", "/WEB-INF/views/admin/sales-stats.jsp");
+	    return "layout/layout";
     }
 }

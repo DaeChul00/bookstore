@@ -10,5 +10,9 @@ public interface StatService {
 	List<Map<String, Object>> getDailySales();
 	List<Map<String, Object>> getBestSellers();
     List<BookVO> getTopRatedBooks();
+    List<Map<String, Object>> getWeeklySales();
+	List<Map<String, Object>> getMonthlySales();
+	List<Map<String, Object>> getYearlySales();
+	List<Map<String, Object>> getPublisherSales();
     
 }

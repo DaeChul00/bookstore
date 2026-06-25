@@ -16,7 +16,7 @@ body { background-color: #fff; color: var(--kb-text); line-height: 1.6; }
 
 /* ���̾ƿ� ���� */
 .wrapper { display: flex; flex-direction: column; min-height: 100vh; }
-main { flex: 1; padding: 60px 0; background-color: #fdfdfd; }
+main { flex: 1; padding: 0; background-color: #fdfdfd; }
 
 /* ��ư ��Ÿ�� */
 .btn-kb {
