@@ -9,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -106,19 +107,31 @@ public class BookController {
 		return mv;
 	}
 
-	@RequestMapping(value = "update", method = RequestMethod.POST)
-	public String update(BookVO bk, RedirectAttributes ra) {
-		if (!isAdmin()) {
-			return "redirect:/book/list";
+		@RequestMapping(value = {"update", "insert"}, method = RequestMethod.POST)
+		public String update(BookVO bk, RedirectAttributes ra) {
+			if (!isAdmin()) {
+				return "redirect:/book/list";
+			}
+
+			if (bk.getId() == 0) {
+				ra.addFlashAttribute("kind", "insert");
+				
+				if (service.insert(bk)) { 
+					ra.addFlashAttribute("message", "success");
+				} else {
+					ra.addFlashAttribute("message", "fail");
+				}
+				return "redirect:/book/list";
+			}
+
+			ra.addFlashAttribute("kind", "update");
+			if(service.updateBook(bk)) {
+				ra.addFlashAttribute("message", "success");
+			} else {
+				ra.addFlashAttribute("message", "fail");
+			}
+			return "redirect:/book/view?id=" + bk.getId();
 		}
-		ra.addFlashAttribute("kind", "update");
-		if(service.updateBook(bk)) {
-		    ra.addFlashAttribute("message", "success");
-		} else {
-		    ra.addFlashAttribute("message", "fail");
-		}
-		return "redirect:/book/view?id=" + bk.getId();
-	}
 	
 	@RequestMapping("delete")
 	public String delete(@RequestParam("id") int id, RedirectAttributes ra) {
@@ -133,5 +146,78 @@ public class BookController {
 	        ra.addFlashAttribute("message", "fail");
 	    }
 	    return "redirect:/book/list";
+	}
+	
+	@ResponseBody
+	@RequestMapping(value = "/fetchBookInfo", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
+	public BookVO fetchBookInfo(@RequestParam("isbn") String isbn) {
+		if (isbn == null || isbn.trim().isEmpty()) {
+			return null;
+		}
+
+		try {
+			// 1. 카카오 책 검색 API URL 설정 (ISBN 타겟 검색)
+			String url = "https://dapi.kakao.com/v3/search/book?target=isbn&query=" + isbn.trim();
+			
+			// 2. HTTP 요청 헤더에 카카오 발급 REST API 키 세팅
+			// FIXME: 임시 테스트용 키입니다. 추후 본인의 카카오 REST API 키로 교체하시면 됩니다.
+			String apiKey = "KakaoAK a02091f188b98e20cf7cb974f679a4be"; 
+			
+			org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+			org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+			headers.set("Authorization", apiKey);
+			
+			org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+			
+			// 3. 외부 API 서버와 통신 실행
+			org.springframework.http.ResponseEntity<String> response = restTemplate.exchange(
+				url, 
+				org.springframework.http.HttpMethod.GET, 
+				entity, 
+				String.class
+			);
+			
+			// 4. Jackson 라이브러리를 활용해 카카오 JSON 응답 구조 파싱
+			com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+			com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(response.getBody());
+			com.fasterxml.jackson.databind.JsonNode documents = root.path("documents");
+			
+			// 검색 결과가 존재하는 경우
+			if (documents.isArray() && documents.size() > 0) {
+				com.fasterxml.jackson.databind.JsonNode bookNode = documents.get(0);
+				
+				// 카카오 저자 리스트 파싱 ([홍길동, 아무개] -> "홍길동, 아무개" 문자열 변환)
+				StringBuilder authors = new StringBuilder();
+				if (bookNode.path("authors").isArray()) {
+					for (com.fasterxml.jackson.databind.JsonNode author : bookNode.path("authors")) {
+						if (authors.length() > 0) authors.append(", ");
+						authors.append(author.asText());
+					}
+				}
+				
+				// 카카오 날짜 포맷팅 (ISO 8601 -> "YYYY년 MM월 DD일" 규격으로 정제)
+				String rawDate = bookNode.path("datetime").asText();
+				String formattedDate = "";
+				if (rawDate != null && rawDate.length() >= 10) {
+					formattedDate = rawDate.substring(0, 4) + "년 " + rawDate.substring(5, 7) + "월 " + rawDate.substring(8, 10) + "일";
+				}
+				
+				// 대철님의 BookVO 규격에 맞춰 빌더로 데이터 바인딩 후 리턴
+				return BookVO.builder()
+						.isbn(isbn.trim())
+						.title(bookNode.path("title").asText())
+						.author(authors.toString())
+						.publisher(bookNode.path("publisher").asText())
+						.publictiondate(formattedDate)
+						.price(bookNode.path("price").asInt())
+						.content(bookNode.path("contents").asText())
+						.bookimage(bookNode.path("thumbnail").asText())
+						.rating(0.0f) // 초기 평점 세팅
+						.build();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null; // 실패 또는 검색 결과 없을 시 안전하게 null 리턴
 	}
 }
