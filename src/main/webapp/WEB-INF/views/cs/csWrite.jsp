@@ -6,7 +6,7 @@
 
 	<div class="d-flex justify-content-between mb-3">
 		<div></div>
-		<button class="btn btn-secondary" onclick="location.href='list'">목록</button>
+		<button type="button" class="btn btn-secondary" onclick="location.href='${pageContext.request.contextPath}/cs/csList'">목록</button>
 	</div>
 
 	<form action="${pageContext.request.contextPath}/cs/insert"

@@ -1,113 +1,99 @@
 package order.controller;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import book.model.BookVO;
+import book.service.BookService;
 import order.model.CartVO;
 import order.model.OrderVO;
 import order.service.CartService;
 import order.service.OrderService;
-import book.model.BookVO;
-import book.service.BookService; // 💡 비회원 도서 정보 조회를 위해 임포트 추가
+import order.service.ReviewService;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Controller
 @RequestMapping("/order")
 public class OrderController {
 
     @Autowired
+    private BookService bookService;
+    
+    @Autowired
     private CartService cartService;
 
     @Autowired
     private OrderService orderService;
-
+    
     @Autowired
-    private BookService bookService; // 💡 비회원 쿠키 장바구니 화면 노출용 도서 서비스 주입
+    private ReviewService reviewService;
 
-    // 시큐리티 금고에서 로그인된 회원의 진짜 아이디를 안전하게 추출하는 공통 메서드
-    private String getLoginId() {
+    // 스프링 시큐리티에서 로그인한 회원의 진짜 아이디를 추출하는 유틸 메서드
+    private String getSecurityLoginId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || "anonymousUser".equals(auth.getName())) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
             return null;
         }
         return auth.getName();
     }
 
-    // 1. 장바구니 목록 보기 (cart.jsp 연결 + 비회원 쿠키 파싱 완벽 복구)
+    // 1. 회원/비회원 통합 장바구니 화면 출력
     @RequestMapping("/cart")
     public String cartList(HttpServletRequest request, Model model) {
-        String mid = getLoginId();
+        String mid = getSecurityLoginId();
         
         if (mid != null) {
-            // ⭕ [회원 로그인 상태]: 기존처럼 데이터베이스(DB)에서 조회
+            // [회원 상태]: DB에서 적재된 리스트를 가져옵니다.
             model.addAttribute("cartList", cartService.getCartList(mid));
         } else {
-            // ⭕ [비회원 로그아웃 상태]: 브라우저의 guestCart 쿠키 가공 처리 후 바인딩
+            // [비회원 상태]: 브라우저 guestCart 쿠키를 디코딩 및 파싱하여 도서 정보와 결합합니다.
             List<CartVO> guestCartList = new ArrayList<>();
             Cookie[] cookies = request.getCookies();
-            
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if ("guestCart".equals(cookie.getName())) {
                         try {
-                            // URL 인코딩된 쿠키 문자열 복원
-                            String cartJson = java.net.URLDecoder.decode(cookie.getValue(), "UTF-8");
+                            String decodedCookie = URLDecoder.decode(cookie.getValue(), "UTF-8");
+                            ObjectMapper mapper = new ObjectMapper();
+                            List<java.util.Map<String, Object>> list = mapper.readValue(decodedCookie, new TypeReference<List<java.util.Map<String, Object>>>() {});
                             
-                            // 대괄호[], 중괄호{} 텍스트 분해 유틸 로직
-                            String cleanJson = cartJson.replace("[", "").replace("]", "");
-                            if (!cleanJson.trim().isEmpty()) {
-                                String[] items = cleanJson.split("\\},\\s*\\{");
-                                
-                                for (String item : items) {
-                                    String refinedItem = item.replace("{", "").replace("}", "");
-                                    String[] subParts = refinedItem.split(",");
-                                    int bookId = 0;
-                                    int count = 0;
-                                    
-                                    for (String part : subParts) {
-                                        if (part.contains("bookId")) {
-                                            bookId = Integer.parseInt(part.replaceAll("[^0-9]", "").trim());
-                                        } else if (part.contains("count")) {
-                                            count = Integer.parseInt(part.replaceAll("[^0-9]", "").trim());
-                                        }
-                                    }
-                                    
-                                    // 파싱 성공 시 BookService에서 책 세부정보(제목, 가격, 이미지)를 실시간 바인딩
-                                    if (bookId > 0 && count > 0) {
-                                        BookVO bookInfo = bookService.getBook(bookId);
-                                        if (bookInfo != null) {
-                                            guestCartList.add(CartVO.builder()
-                                                    .bookId(bookId)
-                                                    .count(count)
-                                                    .title(bookInfo.getTitle())
-                                                    .price(bookInfo.getPrice())
-                                                    .bookimage(bookInfo.getBookimage())
-                                                    .build());
-                                        }
-                                    }
+                            for (java.util.Map<String, Object> map : list) {
+                                int bookId = (Integer) map.get("bookId");
+                                int count = (Integer) map.get("count");
+                                BookVO book = bookService.getBook(bookId);
+                                if (book != null) {
+                                    guestCartList.add(CartVO.builder()
+                                            .bookId(bookId)
+                                            .count(count)
+                                            .title(book.getTitle())
+                                            .price(book.getPrice())
+                                            .bookimage(book.getBookimage())
+                                            .build());
                                 }
                             }
                         } catch (Exception e) {
-                            System.out.println("❌ OrderController 비회원 쿠키 변환 중 예외: " + e.getMessage());
+                            e.printStackTrace();
                         }
                     }
                 }
             }
-            // 쿠키에서 뽑아낸 목록을 화면(Model)에 전달
             model.addAttribute("cartList", guestCartList);
         }
         
@@ -115,50 +101,95 @@ public class OrderController {
         return "layout/layout";
     }
 
-    // 2. 장바구니에 상품 추가
+    // 회원 및 비회원 겸용 장바구니 담기 엔드포인트
     @RequestMapping("/addCart")
-    public String addCart(CartVO cart, RedirectAttributes ra) {
-        String mid = getLoginId();
-        if (mid == null) return "redirect:/login";
-
-        cart.setMemberId(mid);
-        if (cartService.addCart(cart)) {
-            ra.addFlashAttribute("msg", "장바구니에 담겼습니다.");
+    public String addCart(@RequestParam("bookId") int bookId, 
+                          @RequestParam("count") int count,
+                          HttpServletRequest request, 
+                          HttpServletResponse response) {
+        
+        String mid = getSecurityLoginId();
+        
+        if (mid != null) {
+            // 1) 회원인 경우 즉시 DB 연동 실행
+            CartVO cart = CartVO.builder()
+                            .memberId(mid)
+                            .bookId(bookId)
+                            .count(count)
+                            .build();
+            cartService.addCart(cart);
+        } else {
+            // 2) 비회원인 경우 브라우저 쿠키에 적재 처리
+            Cookie[] cookies = request.getCookies();
+            String guestCartValue = "";
+            List<java.util.Map<String, Object>> cartList = new ArrayList<>();
+            ObjectMapper mapper = new ObjectMapper();
+            
+            try {
+                if (cookies != null) {
+                    for (Cookie cookie : cookies) {
+                        if ("guestCart".equals(cookie.getName())) {
+                            guestCartValue = URLDecoder.decode(cookie.getValue(), "UTF-8");
+                            cartList = mapper.readValue(guestCartValue, new TypeReference<List<java.util.Map<String, Object>>>() {});
+                            break;
+                        }
+                    }
+                }
+                
+                boolean isExist = false;
+                for (java.util.Map<String, Object> map : cartList) {
+                    if ((Integer) map.get("bookId") == bookId) {
+                        map.put("count", (Integer) map.get("count") + count);
+                        isExist = true;
+                        break;
+                    }
+                }
+                
+                if (!isExist) {
+                    java.util.Map<String, Object> newProduct = new java.util.HashMap<>();
+                    newProduct.put("bookId", bookId);
+                    newProduct.put("count", count);
+                    cartList.add(newProduct);
+                }
+                
+                String jsonStr = mapper.writeValueAsString(cartList);
+                Cookie cartCookie = new Cookie("guestCart", URLEncoder.encode(jsonStr, "UTF-8"));
+                cartCookie.setPath("/");
+                cartCookie.setMaxAge(30 * 24 * 60 * 60); // 30일 보존
+                response.addCookie(cartCookie);
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return "redirect:/order/cart";
     }
 
-    // 3. 장바구니 수량 변경
-    @PostMapping("/updateCartAsync")
+    // 3. 비동기 수량 변경 처리 (AJAX 호출 대응)
     @ResponseBody
-    public Map<String, String> updateCartAsync(@RequestParam("cartId") int bookId, @RequestParam("count") int count) {
-        Map<String, String> result = new HashMap<>();
-        String mid = getLoginId();
-        
-        if (mid == null) {
-            result.put("status", "fail");
-            return result;
-        }
+    @RequestMapping(value = "/updateCartAsync", method = RequestMethod.POST)
+    public String updateCartAsync(@RequestParam("bookId") int bookId, @RequestParam("count") int count) {
+        String mid = getSecurityLoginId();
+        if (mid == null) return "login_required";
         
         boolean ok = cartService.updateCartCount(mid, bookId, count);
-        result.put("status", ok ? "success" : "fail");
-        return result;
+        return ok ? "success" : "fail";
     }
 
-    // 4. 장바구니 항목 개별 삭제
-    @RequestMapping(value = "/deleteCart", method = RequestMethod.POST)
+    // 4. 장바구니 항목 개별 삭제 처리
+    @RequestMapping("/deleteCart")
     public String deleteCart(@RequestParam("cartId") int bookId) {
-        String mid = getLoginId();
-        if (mid != null) {
-            cartService.deleteCart(mid, bookId);
-        }
+        String mid = getSecurityLoginId();
+        if (mid == null) return "redirect:/login";
+        
+        cartService.deleteCart(mid, bookId);
         return "redirect:/order/cart";
     }
 
-    // 5. 주문하기 (구매 프로세스 가동 시 조원이 추가한 배송 준비중 상태 기본 세팅)
+    // 5. 도서 통합 결제 및 구매 프로세스 실행
     @RequestMapping("/buy")
     public String buy() {
-        String mid = getLoginId();
+        String mid = getSecurityLoginId();
         if (mid == null) return "redirect:/login";
         
         List<CartVO> cartList = cartService.getCartList(mid);
@@ -172,7 +203,7 @@ public class OrderController {
                         .count(cart.getCount())
                         .orderPrice(cart.getPrice() * cart.getCount())
                         .bookimage(cart.getBookimage())
-                        .deliveryStatus("주문완료") // 초기 배송 상태 부여
+                        .deliveryStatus("주문완료")
                         .build());
             }
             orderService.placeOrder(mid, orderList);
@@ -181,14 +212,36 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
-    // 6. 주문 내역 보기 (order-list.jsp 연결)
+    // 6. 나의 주문 내역 조회 및 출력
     @RequestMapping("/list")
     public String orderList(Model model) {
-        String mid = getLoginId();
+        String mid = getSecurityLoginId();
         if (mid == null) return "redirect:/login";
-
-        model.addAttribute("orderList", orderService.getOrderList(mid));
+        
+        List<OrderVO> orderList = orderService.findOrdersByMemberId(mid);
+        model.addAttribute("orderList", orderList);
         model.addAttribute("contentPage", "/WEB-INF/views/order/order-list.jsp");
         return "layout/layout";
+    }
+    
+    // 7. 중복 리뷰 가드가 작용하는 AJAX 한줄평 등록
+    @ResponseBody
+    @RequestMapping(value = "/review-insert", method = RequestMethod.POST)
+    public String insertReview(@RequestParam("bookId") int bookId,
+                               @RequestParam("rating") int rating,
+                               @RequestParam("content") String content) {
+        
+        String mid = getSecurityLoginId();
+        if (mid == null) {
+            return "login_required";
+        }
+        
+        boolean isDuplicate = bookService.hasAlreadyReviewed(bookId, mid);
+        if (isDuplicate) {
+            return "already_exists";
+        }
+        
+        boolean success = reviewService.addReview(bookId, mid, rating, content);
+        return success ? "success" : "fail";
     }
 }

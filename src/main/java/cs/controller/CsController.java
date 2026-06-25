@@ -1,11 +1,8 @@
 package cs.controller;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,7 +22,6 @@ public class CsController {
 
     private ModelAndView render(String pageName) {
         ModelAndView mv = new ModelAndView("layout/layout");
-        // /WEB-INF/views/cs/파일명.jsp 구조로 고정 (컨트롤러 수준에서 관리)
         mv.addObject("contentPage", String.format("/WEB-INF/views/cs/%s.jsp", pageName));
         return mv;
     }
@@ -35,11 +31,6 @@ public class CsController {
         return "redirect:/cs/csList";
     }
 
-//    // 등록 폼
-//    @RequestMapping("insertform")
-//    public ModelAndView insertform() {
-//        return render("insertform");
-//    }
     
     @RequestMapping("insertform")
     public ModelAndView csWrite() {

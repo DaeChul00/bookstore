@@ -19,7 +19,6 @@ import order.service.CartService; // 장바구니 서비스 임포트 추가
 @Controller
 public class LoginController {
 
-	// 💡 대철이의 장바구니 비회원 연동 로직을 위해 CartService를 안전하게 주입받습니다.
 	@Autowired
 	private CartService cartService;
 

@@ -1,12 +1,9 @@
 package order.repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import order.model.OrderVO;
 
@@ -16,7 +13,7 @@ public class OrderDAOH2 {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // 주문 저장 (기본 배송 상태 '주문완료'로 세팅)
+    // 1. 주문 저장 (배송 상태 '주문완료' 기본 부여)
     public int insertOrder(OrderVO order) {
         String sql = "INSERT INTO ORDERS (member_id, book_id, title, count, order_price, bookimage, delivery_status) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -33,62 +30,52 @@ public class OrderDAOH2 {
         );
     }
 
-    // 일반 회원용 본인 주문 내역 조회
+    // 2. 일반 유저용 본인 마이페이지 주문 내역 조회 (중복 서브 묶음 연산 구조)
     public List<OrderVO> findOrdersByMemberId(String memberId) {
-        String sql = "SELECT * FROM ORDERS WHERE member_id = ? ORDER BY order_id DESC";
+        String sql = "SELECT BOOK_ID, TITLE, BOOKIMAGE, SUM(COUNT) AS TOTAL_COUNT, " +
+                     "SUM(ORDER_PRICE) AS TOTAL_PRICE, MAX(ORDER_DATE) AS LATEST_DATE " +
+                     "FROM ORDERS " +
+                     "WHERE MEMBER_ID = ? " +
+                     "GROUP BY BOOK_ID, TITLE, BOOKIMAGE " +
+                     "ORDER BY LATEST_DATE DESC";
+        
         try {
-            return jdbcTemplate.query(sql, new RowMapper<OrderVO>() {
-                @Override
-                public OrderVO mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    return OrderVO.builder()
-                            .orderId(rs.getInt("order_id"))
-                            .memberId(rs.getString("member_id"))
-                            .bookId(rs.getInt("book_id"))
-                            .title(rs.getString("title"))
-                            .count(rs.getInt("count"))
-                            .orderPrice(rs.getBigDecimal("order_price").intValue())
-                            .bookimage(rs.getString("bookimage"))
-                            .orderDate(rs.getTimestamp("order_date") != null ? rs.getTimestamp("order_date").toString() : null)
-                            .deliveryStatus(rs.getString("delivery_status"))
-                            .build();
-                }
-            }, memberId);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
-    }
-    
-    // =================================================================
-    // 관리자 전용 전체 회원 주문 목록 조회 (최신순)
-    // =================================================================
-    public List<OrderVO> findAllOrdersForAdmin() {
-        String sql = "SELECT * FROM ORDERS ORDER BY order_date DESC";
-        try {
-            return jdbcTemplate.query(sql, new RowMapper<OrderVO>() {
-                @Override
-                public OrderVO mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    return OrderVO.builder()
-                            .orderId(rs.getInt("order_id"))
-                            .memberId(rs.getString("member_id"))
-                            .title(rs.getString("title"))
-                            .count(rs.getInt("count"))
-                            .orderPrice(rs.getBigDecimal("order_price").intValue())
-                            .bookimage(rs.getString("bookimage"))
-                            .orderDate(rs.getTimestamp("order_date") != null ? rs.getTimestamp("order_date").toString() : null)
-                            .deliveryStatus(rs.getString("delivery_status"))
-                            .build();
-                }
-            });
+            return jdbcTemplate.query(sql, (rs, rowNum) -> OrderVO.builder()
+                .bookId(rs.getInt("BOOK_ID"))
+                .title(rs.getString("TITLE"))
+                .bookimage(rs.getString("BOOKIMAGE"))
+                .count(rs.getInt("TOTAL_COUNT"))
+                .orderPrice(rs.getInt("TOTAL_PRICE"))
+                .orderDate(rs.getTimestamp("LATEST_DATE") != null ? rs.getTimestamp("LATEST_DATE").toString() : null)
+                .build(), memberId);
         } catch (Exception e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
     }
 
-    // =================================================================
-    // 관리자용 특정 주문의 배송 상태 변경 처리
-    // =================================================================
+    // 3. 관리자 대시보드용 원상 복구 전체 내역 조회 API
+    public List<OrderVO> findAllOrdersForAdmin() {
+        String sql = "SELECT * FROM ORDERS ORDER BY order_date DESC";
+        try {
+            return jdbcTemplate.query(sql, (rs, rowNum) -> OrderVO.builder()
+                .orderId(rs.getInt("order_id"))
+                .memberId(rs.getString("member_id"))
+                .bookId(rs.getInt("book_id"))
+                .title(rs.getString("title"))
+                .count(rs.getInt("count"))
+                .orderPrice(rs.getBigDecimal("order_price").intValue())
+                .bookimage(rs.getString("bookimage"))
+                .orderDate(rs.getTimestamp("order_date") != null ? rs.getTimestamp("order_date").toString() : null)
+                .deliveryStatus(rs.getString("delivery_status"))
+                .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    // 4. 관리자용 배송 상태 스위칭 변경 API 
     public int updateDeliveryStatus(int orderId, String status) {
         String sql = "UPDATE ORDERS SET delivery_status = ? WHERE order_id = ?";
         return jdbcTemplate.update(sql, status, orderId);

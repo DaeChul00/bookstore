@@ -42,29 +42,31 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                        AntPathRequestMatcher.antMatcher("/"),
-                        AntPathRequestMatcher.antMatcher("/book/**"),
-                        AntPathRequestMatcher.antMatcher("/order/cart"),
-                        AntPathRequestMatcher.antMatcher("/order/addCart"),
-                        AntPathRequestMatcher.antMatcher("/order/updateCartAsync"),
-                        AntPathRequestMatcher.antMatcher("/signup"),
-                        AntPathRequestMatcher.antMatcher("/login"),
-                        AntPathRequestMatcher.antMatcher("/kakao/**"),
-                        AntPathRequestMatcher.antMatcher("/css/**"),
-                        AntPathRequestMatcher.antMatcher("/js/**"),
-                        AntPathRequestMatcher.antMatcher("/images/**")
-                ).permitAll()
-                .requestMatchers(AntPathRequestMatcher.antMatcher("/admin/**")).hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
+                    .requestMatchers(
+                            AntPathRequestMatcher.antMatcher("/"),
+                            AntPathRequestMatcher.antMatcher("/book/**"),
+                            AntPathRequestMatcher.antMatcher("/order/cart"),
+                            AntPathRequestMatcher.antMatcher("/order/addCart"),
+                            AntPathRequestMatcher.antMatcher("/order/updateCartAsync"),
+                            AntPathRequestMatcher.antMatcher("/order/deleteCart"),
+                            AntPathRequestMatcher.antMatcher("/order/review-insert"),
+                            AntPathRequestMatcher.antMatcher("/cs/**"),
+                            AntPathRequestMatcher.antMatcher("/signup"),
+                            AntPathRequestMatcher.antMatcher("/login"),
+                            AntPathRequestMatcher.antMatcher("/kakao/**"),
+                            AntPathRequestMatcher.antMatcher("/css/**"),
+                            AntPathRequestMatcher.antMatcher("/js/**"),
+                            AntPathRequestMatcher.antMatcher("/images/**")
+                    ).permitAll()
+                    .requestMatchers(AntPathRequestMatcher.antMatcher("/admin/**")).hasRole("ADMIN")
+                    .anyRequest().authenticated()
+                )
 
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .usernameParameter("memberId")
                 .passwordParameter("password")
-                // 💡 [강제 고정] 무조건 이 핸들러를 타도록 시큐리티 관제탑에 명시적으로 묶어버립니다!
                 .successHandler(customLoginSuccessHandler())
                 .failureUrl("/login?error=true")
                 .permitAll()
@@ -98,7 +100,6 @@ public class SecurityConfig {
                                 String cartJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
                                 System.out.println("▶ [디버깅] 추출된 순수 쿠키 문자열: " + cartJson);
                                 
-                                // 카카오 로그인과 동일하게 가장 안전하고 직관적인 괄호 정리 기법 적용
                                 String cleanJson = cartJson.replace("[", "").replace("]", "");
                                 String[] items = cleanJson.split("\\},\\s*\\{");
                                 

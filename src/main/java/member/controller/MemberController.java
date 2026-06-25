@@ -27,14 +27,14 @@ public class MemberController {
 		return "layout/layout";
 	}
 
-	// 2. 회원가입 처리 로직 (민한이의 e.printStackTrace() 반영 통합)
+	// 2. 회원가입 처리 로직
 	@RequestMapping(value = "/signup", method = RequestMethod.POST)
 	public String signup(MemberVO vo, RedirectAttributes ra) {
 		try {
 			memberService.signup(vo);
 			return "redirect:/login";
 		} catch (RuntimeException e) {
-			// 💡 민한이의 충돌 코드인 에러 트레이스 출력 로직을 깔끔하게 살려둡니다.
+			
 			e.printStackTrace();
 			
 			if ("DUPLICATE_ID".equals(e.getMessage())) {
@@ -45,15 +45,20 @@ public class MemberController {
 		}
 	}
 
-	// 3. 회원 정보 수정 폼 띄우기 (스프링 시큐리티 인증 객체 기반으로 변경)
+	// 3. 회원 정보 수정 폼 띄우기 (URL: /member/update)
 	@RequestMapping(value = "/member/update", method = RequestMethod.GET)
 	public String updateForm(Model model) {
-		// 💡 시큐리티 관제탑에서 현재 로그인한 유저 아이디를 안전하게 꺼내옵니다.
+		
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
 			return "redirect:/login";
 		}
 
+			// 로그인한 사용자의 ID로 DB에서 회원 정보를 가져와 모델에 심어줍니다.
+		String loggedInId = auth.getName();
+		member.model.MemberVO member = memberService.login(loggedInId, null); 
+			
+		model.addAttribute("loginUser", member);
 		model.addAttribute("contentPage", "/WEB-INF/views/member/MemberUpdateForm.jsp");
 		return "layout/layout";
 	}
@@ -67,8 +72,6 @@ public class MemberController {
 		// 2. 알림 메시지 전달
 		ra.addFlashAttribute("msg", "회원 정보가 수정되었습니다. 다시 로그인해 주세요.");
 		
-		// 3. 💡 시큐리티 환경에서는 안전하게 세션을 한 번 브레이크(invalidate)해주고 
-		// 재로그인하게 만드는 것이 회원 세션 꼬임을 방지하는 가장 정석적인 방법입니다!
 		session.invalidate();
 		
 		return "redirect:/login"; 

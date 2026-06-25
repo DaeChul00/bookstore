@@ -92,13 +92,6 @@
 		</dependency>
 
 
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>jstl</artifactId>
-			<version>1.2</version>
-		</dependency>
-
-
 		<!-- 카카오 API 로그인을 위한 의존성 -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

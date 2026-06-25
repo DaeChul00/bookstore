@@ -11,46 +11,49 @@
 .book-info { flex: 1; margin-left: 35px; }
 .book-title { font-size: 20px; font-weight: bold; color: #2c3e50; text-decoration: none; }
 .book-meta { margin: 10px 0; color: #777; font-size: 14px; }
-.price-area { margin: 12px 0; font-size: 18px; font-weight: bold; color: #e67e22; }
-.content-preview { color: #666; font-size: 14px; line-height: 1.6; height: 45px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; margin-bottom: 15px; }
+.price-area { font-size: 18px; font-weight: bold; color: #e67e22; margin: 10px 0; }
+.content-preview { color: #666; font-size: 14px; line-height: 1.6; height: 75px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; margin-bottom: 10px; }
 .rating-area { color: #f39c12; font-weight: bold; font-size: 15px; }
-.insertbtn { background-color: #2c3e50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none; }
-.pagination-wrapper { display: flex; justify-content: center; margin-top: 40px; margin-bottom: 20px; }
-.pagination { display: flex; list-style: none; padding: 0; }
-.pagination li { margin: 0 4px; }
-.pagination a { display: block; padding: 8px 14px; text-decoration: none; color: #2c3e50; border: 1px solid #ddd; border-radius: 4px; font-weight: bold; transition: background-color 0.2s; }
-.pagination a:hover { background-color: #eee; }
+.pagination-wrapper { margin-top: 40px; display: flex; justify-content: center; }
+.pagination { display: flex; list-style: none; padding: 0; gap: 5px; }
+.pagination li a { color: #333; text-decoration: none; padding: 8px 14px; border: 1px solid #ddd; border-radius: 4px; }
 .pagination li.active a { background-color: #2c3e50; color: white; border-color: #2c3e50; }
 .pagination li.disabled a { color: #ccc; pointer-events: none; background-color: #fafafa; }
 </style>
 
 <div class="book-container">
 	<div class="headline">
-		<h2 style="margin: 0; color: #2c3e50;">전체 도서 목록</h2>
+		<h2>📚 도서 검색 결과</h2>
+		<sec:authorize access="hasRole('ADMIN')">
+			<a href="${pageContext.request.contextPath}/book/insertform" class="btn btn-sm btn-outline-dark">➕ 새 도서 추가</a>
+		</sec:authorize>
 	</div>
 
-	<%-- 💡 스프링 시큐리티 태그를 활용해 관리자(ADMIN)일 때만 도서 등록 버튼 노출 --%>
-	<sec:authorize access="hasRole('ADMIN')">
-		<div style="text-align: right; margin-bottom: 20px;">
-			<a href="${pageContext.request.contextPath}/book/insertform" class="insertbtn">도서 등록</a>
-		</div>
-	</sec:authorize>
-
-	<c:forEach var="book" items="${list}">
+	<c:forEach var="book" items="${p.list}">
 		<div class="book-item">
-			<div class="img-box">
-				<a href="${pageContext.request.contextPath}/book/view?id=${book.id}">
-					<img src="${book.bookimage}" class="book-img">
-				</a>
-			</div>
+			<a href="${pageContext.request.contextPath}/book/view?id=${book.id}">
+				<img src="${book.bookimage}" class="book-img" alt="도서 이미지">
+			</a>
 			<div class="book-info">
 				<a href="${pageContext.request.contextPath}/book/view?id=${book.id}" class="book-title">${book.title}</a>
-				<div class="book-meta">${book.author} · ${book.publisher}</div>
+				<div class="book-meta">${book.author} · ${book.publisher} | ${book.publictiondate}</div>
+				
 				<div class="price-area">
 					<fmt:formatNumber value="${book.price}" type="number" />원
 				</div>
+				
 				<div class="content-preview">${book.content}</div>
-				<div class="rating-area">★ ${book.rating}</div>
+				
+				<div class="rating-area">
+					<c:choose>
+						<c:when test="${book.reviewCount == 0}">
+							<span style="color: #aaa; font-weight: normal; font-size: 13px;">💬 첫 한줄평을 남겨보세요!</span>
+						</c:when>
+						<c:otherwise>
+							★ ${book.avgRating}점 <span style="color: #888; font-size: 13px; font-weight: normal;">(${book.reviewCount}개의 리뷰)</span>
+						</c:otherwise>
+					</c:choose>
+				</div>
 			</div>
 		</div>
 	</c:forEach>
@@ -58,7 +61,7 @@
 	<div class="pagination-wrapper">
 		<ul class="pagination">
 
-			<%-- 1. [이전] 블록 가기 --%>
+			<%-- 1. [이전] 블록 가기 --% border-안전화 %>
 			<c:choose>
 				<c:when test="${p.pre}">
 					<li><a href="${pageContext.request.contextPath}/book/list?page=${p.startPage - 1}&category=${category}&keyword=${keyword}">&laquo; 이전</a></li>
