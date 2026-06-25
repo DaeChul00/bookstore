@@ -52,6 +52,10 @@ public class BookService {
 	
 	public boolean hasAlreadyReviewed(int bookId, String memberId) {
 		return dao.hasAlreadyReviewed(bookId, memberId);
+	}
+	public List<BookVO> searchBooks(String category, String keyword) {
+		// TODO Auto-generated method stub
+		return dao.searchBooks(category, keyword);
 	};
 
 }

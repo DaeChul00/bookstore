@@ -357,5 +357,10 @@ BookVO book = null;
         }
         return false;
     }
+    
+    @Override
+    public List<BookVO> searchBooks(String category, String keyword) {
+        return findAll(category, keyword);
+    }
 	
 }

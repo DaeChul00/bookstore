@@ -19,5 +19,6 @@ public interface BookDAO {
 	public BookVO getBook(int id);
     public List<ReviewVO> getReviewsByBookId(int bookId);
     public boolean hasAlreadyReviewed(int bookId, String memberId);
+	List<BookVO> searchBooks(String category, String keyword);
 	
 }
