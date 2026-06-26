@@ -34,5 +34,22 @@ public class StatServiceImpl implements StatService{
 	public List<BookVO> getTopRatedBooks() {
 		return statDAO.getTopRatedBooks();
 	}
+	
+	@Override
+    public List<Map<String, Object>> getMonthlySales() {
+		return statDAO.getMonthlySales();
+	}
+    @Override
+    public List<Map<String, Object>> getYearlySales() {
+    	return statDAO.getYearlySales();
+    }
+    @Override
+    public List<Map<String, Object>> getPublisherSales() {
+    	return statDAO.getPublisherSales();
+    }
+    @Override
+    public List<Map<String, Object>> getWeeklySales() {
+        return statDAO.getWeeklySales();
+    }
 
 }
