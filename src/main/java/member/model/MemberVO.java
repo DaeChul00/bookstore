@@ -14,10 +14,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @ToString
 public class MemberVO {
-	private String memberId; // DBÀÇ MEMBER_ID¿Í ¸ÅÄª
-    private String password; // ºñ¹Ð¹øÈ£
-    private String name;     // ÀÌ¸§
-    private String email;    // ÀÌ¸ÞÀÏ
-    private String role;     // ±ÇÇÑ (USER / ADMIN)
-    private Timestamp regdate; // °¡ÀÔÀÏ
+	private String memberId; // DBï¿½ï¿½ MEMBER_IDï¿½ï¿½ ï¿½ï¿½Äª
+    private String password; // ï¿½ï¿½Ð¹ï¿½È£
+    private String name;     // ï¿½Ì¸ï¿½
+    private String email;    // ï¿½Ì¸ï¿½ï¿½ï¿½
+    private String zipcode;
+    private String roadAddress;
+    private String role;     // ï¿½ï¿½ï¿½ï¿½ (USER / ADMIN)
+    private Timestamp regdate; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }

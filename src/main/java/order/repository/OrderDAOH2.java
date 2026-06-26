@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import member.model.MemberAddressVO;
 import order.model.OrderVO;
 
 @Repository
@@ -109,4 +111,23 @@ public class OrderDAOH2 {
             return null;
         }
     }
+
+	public void disableDefaultAddress(String memberId) {
+		String sql = "UPDATE MEMBER_ADDRESS SET IS_DEFAULT = 'N' WHERE MEMBER_ID = ? AND IS_DEFAULT = 'Y'";
+        jdbcTemplate.update(sql, memberId);
+		
+	}
+
+	public void insertAddress(MemberAddressVO addressVO) {
+		String sql = "INSERT INTO MEMBER_ADDRESS (MEMBER_ID, ADDR_NAME, ZIPCODE, ROAD_ADDRESS, IS_DEFAULT) "
+                + "VALUES (?, ?, ?, ?, 'Y')";
+     
+     jdbcTemplate.update(sql, 
+         addressVO.getMemberId(),     // 1번째 ?
+         addressVO.getAddrName(),     // 2번째 ? (예: 기본배송지)
+         addressVO.getZipcode(),      // 3번째 ?
+         addressVO.getRoadAddress()   // 4번째 ? (JSP에서 기본주소+상세주소가 합쳐진 문자열)
+     );
+		
+	}
 }

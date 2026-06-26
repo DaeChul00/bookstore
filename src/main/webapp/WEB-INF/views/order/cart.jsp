@@ -11,6 +11,16 @@
 .book-thumb { width: 60px; height: 80px; object-fit: cover; border-radius: 4px; }
 .total-area { text-align: right; margin-top: 30px; font-size: 20px; font-weight: bold; }
 .btn-order { background: #e67e22; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+
+/* ➕ 배송지 섹션 스타일 추가 */
+.delivery-section { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px; margin-top: 40px; display: none; }
+.delivery-section h3 { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2c3e50; }
+.form-group { margin-bottom: 15px; display: flex; align-items: center; }
+.form-group label { width: 120px; font-weight: bold; font-size: 14px; }
+.form-group input[type="text"] { padding: 10px; border: 1px solid #ddd; border-radius: 4px; width: 300px; }
+.address-box { display: flex; gap: 10px; }
+.address-box input { width: 150px !important; }
+.btn-search { background: #4a90e2; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
 </style>
 
 <div class="cart-container">
@@ -54,8 +64,36 @@
                 </tbody>
             </table>
             
+            <div class="delivery-section" id="deliverySection">
+                <h3>📦 배송지 정보 입력</h3>
+                <form id="orderForm" action="${pageContext.request.contextPath}/order/submit" method="post">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                    
+                    <div class="form-group">
+                        <label>배송지 별칭</label>
+                        <input type="text" name="addrName" id="addrName" placeholder="예: 집, 회사" value="기본배송지" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>우편번호</label>
+                        <div class="address-box">
+                            <input type="text" name="zipcode" id="zipcode" placeholder="우편번호" readonly required>
+                            <button type="button" class="btn-search" onclick="execDaumPostcode()">주소 검색</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>배송 주소</label>
+                        <input type="text" id="roadAddress" placeholder="기본주소" readonly required style="width: 500px; margin-bottom: 5px;"><br>
+                        <input type="text" id="detailAddress" placeholder="상세주소 입력" style="width: 500px; margin-left: 120px;">
+                    </div>
+                    
+                    <input type="hidden" name="roadAddress" id="finalRoadAddress">
+                </form>
+            </div>
+            
             <div class="total-area">
-                <button class="btn-order" onclick="handleOrder()">주문하기 ➡️</button>
+                <button class="btn-order" id="mainOrderBtn" onclick="handleOrder()">주문하기 ➡️</button>
             </div>
         </c:otherwise>
     </c:choose>
@@ -63,16 +101,42 @@
 
 <form id="cartActionForm" method="post" style="display:none;">
     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-    
     <input type="hidden" name="cartId" id="actionBookId"/>
     <input type="hidden" name="count" id="actionCount"/>
 </form>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <script>
 var isLogin = false;
 <sec:authorize access="isAuthenticated()">
     isLogin = true;
 </sec:authorize>
+
+// ➕ 카카오 우편번호 검색 함수
+function execDaumPostcode() {
+    new daum.Postcode({
+        oncomplete: function(data) {
+            let roadAddr = data.roadAddress; 
+            let extraRoadAddr = ''; 
+
+            if(data.bname !== '' && /[동|로|가]$/g.test(data.bname)){
+                extraRoadAddr += data.bname;
+            }
+            if(data.buildingName !== '' && data.apartment === 'Y'){
+               extraRoadAddr += (extraRoadAddr !== '' ? ', ' + data.buildingName : data.buildingName);
+            }
+            if(extraRoadAddr !== ''){
+                extraRoadAddr = ' (' + extraRoadAddr + ')';
+            }
+
+            $("#zipcode").val(data.zonecode);
+            $("#roadAddress").val(roadAddr + extraRoadAddr);
+            $("#detailAddress").focus();
+        }
+    }).open();
+}
 
 function handleCountChange(bookId, count) {
     if (count < 1) {
@@ -92,26 +156,18 @@ function handleCountChange(bookId, count) {
 
         fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: formData.toString()
         })
-        .then(function(response) { 
-            return response.text(); // 🛠️ 순수 텍스트 응답 처리
-        })
+        .then(function(response) { return response.text(); })
         .then(function(data) {
-            if (data === "success") {
-                location.reload();
-            } else {
-                alert("수량 변경 반영에 실패했습니다.");
-            }
+            if (data === "success") { location.reload(); } 
+            else { alert("수량 변경 반영에 실패했습니다."); }
         })
         .catch(function(error) {
             console.error("Error:", error);
             alert("서버 통신 중 오류가 발생했습니다.");
         });
-
     } else {
         updateGuestCartCookie(bookId, parseInt(count));
     }
@@ -130,12 +186,36 @@ function handleDelete(bookId) {
     }
 }
 
+// 🛠️ 주문하기 로직 변경
 function handleOrder() {
     if (!isLogin) {
         alert("로그인 후 주문이 가능합니다. 로그인 페이지로 이동합니다.");
         location.href = "${pageContext.request.contextPath}/login";
+        return;
+    }
+
+    var deliverySec = $("#deliverySection");
+
+    // 배송지 창이 열려있지 않다면 먼저 열어준다
+    if (deliverySec.is(":hidden")) {
+        deliverySec.slideDown();
+        $("#mainOrderBtn").text("최종 결제 및 주문완료 💳");
+        
+        // 💡 팁: 만약 기존 회원 기본배송지가 DB에 있다면 
+        // 비동기(Ajax)로 데이터를 미리 불러와서 세팅해 주는 로직을 여기에 구현하면 베스트입니다.
     } else {
-        location.href = "${pageContext.request.contextPath}/order/buy";
+        // 배송지 창이 열려있는 상태에서 한 번 더 누르면 유효성 검사 후 최종 submit
+        if($("#zipcode").val() === "" || $("#roadAddress").val() === "") {
+            alert("배송지 주소를 검색하여 입력해 주세요.");
+            return;
+        }
+
+        // 주소 데이터 결합 후 hidden에 바인딩
+        var finalAddr = $("#roadAddress").val().trim() + " " + $("#detailAddress").val().trim();
+        $("#finalRoadAddress").val(finalAddr);
+
+        // 최종 주문 양식 제출
+        $("#orderForm").submit();
     }
 }
 
@@ -149,17 +229,10 @@ function getCookie(name) {
 function updateGuestCartCookie(bookId, newCount) {
     var cartCookie = getCookie("guestCart");
     var cartList = [];
-    
     if (cartCookie) {
-        try {
-            var decoded = decodeURIComponent(cartCookie);
-            cartList = JSON.parse(decoded);
-        } catch (e) {
-            console.error("Cookie parse error", e);
-            cartList = [];
-        }
+        try { cartList = JSON.parse(decodeURIComponent(cartCookie)); } 
+        catch (e) { cartList = []; }
     }
-    
     var isExist = false;
     for (var i = 0; i < cartList.length; i++) {
         if (cartList[i].bookId === bookId) {
@@ -168,11 +241,7 @@ function updateGuestCartCookie(bookId, newCount) {
             break;
         }
     }
-    
-    if (!isExist) {
-        cartList.push({ bookId: bookId, count: newCount });
-    }
-    
+    if (!isExist) { cartList.push({ bookId: bookId, count: newCount }); }
     document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
     location.reload();
 }
@@ -182,9 +251,7 @@ function removeGuestCartCookie(bookId) {
     if (cartCookie) {
         try {
             var cartList = JSON.parse(decodeURIComponent(cartCookie));
-            cartList = cartList.filter(function(item) {
-                return item.bookId !== bookId;
-            });
+            cartList = cartList.filter(function(item) { return item.bookId !== bookId; });
             document.cookie = "guestCart=" + encodeURIComponent(JSON.stringify(cartList)) + "; path=/; max-age=" + (30*24*60*60);
         } catch(e) {
             document.cookie = "guestCart=; path=/; max-age=0";
@@ -192,4 +259,7 @@ function removeGuestCartCookie(bookId) {
         location.reload();
     }
 }
+<c:if test="${not empty msg}">
+alert("${msg}");
+</c:if>
 </script>

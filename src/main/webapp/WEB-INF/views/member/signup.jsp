@@ -135,7 +135,7 @@ input, select {
 			</div>
 
 			<div class="form-group">
-				<div class="verify-box">
+				<div class="verify-box" style="display:flex">
 					<input type="text" id="authCode" placeholder="인증번호 입력">
 					<button type="button" id="verifyBtn" class="btn verify">확인</button>
 				</div>

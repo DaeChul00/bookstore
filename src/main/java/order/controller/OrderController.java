@@ -4,30 +4,35 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import book.model.BookVO;
 import book.service.BookService;
+import member.model.MemberAddressVO;
 import order.model.CartVO;
 import order.model.OrderVO;
 import order.service.CartService;
 import order.service.OrderService;
 import order.service.ReviewService;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Controller
 @RequestMapping("/order")
@@ -250,5 +255,42 @@ public class OrderController {
         model.addAttribute("order", order); 
         model.addAttribute("contentPage", "/WEB-INF/views/order/order_detail.jsp");
         return "layout/layout";
+    }
+    
+    @RequestMapping(value = "/submit", method = RequestMethod.POST)
+    public String submitOrder(MemberAddressVO addressVO, HttpSession session, RedirectAttributes ra) {
+        
+        // ❌ 기존 코드: session.getAttribute("memberId") -> 시큐리티 환경이라 null 반환됨
+        // String loginId = (String) session.getAttribute("memberId");
+        
+        // ⭕ 변경 코드: 스프링 시큐리티에서 현재 로그인한 유저 아이디 추출
+        String loginId = null;
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        if (principal instanceof UserDetails) {
+            loginId = ((UserDetails)principal).getUsername();
+        } else {
+            loginId = principal.toString();
+        }
+        
+        // 시큐리티 비로그인 상태(익명 사용자 등) 체크
+        if (loginId == null || loginId.equals("anonymousUser")) {
+            ra.addFlashAttribute("msg", "로그인이 필요한 서비스입니다.");
+            return "redirect:/login";
+        }
+        
+        // VO에 정상적인 로그인 ID 바인딩
+        addressVO.setMemberId(loginId);
+        
+        try {
+            orderService.processOrder(addressVO);
+            ra.addFlashAttribute("msg", "주문이 성공적으로 완료되었습니다! 💳");
+            return "redirect:/order/cart";
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            ra.addFlashAttribute("msg", "주문 처리 중 오류가 발생했습니다.");
+            return "redirect:/cart/list";
+        }
     }
 }
