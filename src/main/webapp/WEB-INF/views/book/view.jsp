@@ -86,6 +86,7 @@
 
 <script>
 function addCart(id) {
+    /
     location.href = "${pageContext.request.contextPath}/order/addCart?bookId=" + id + "&count=1";
 }
 </script>

@@ -33,7 +33,7 @@
                     </a>
                     <div class="book-info">
                         <a href="${pageContext.request.contextPath}/book/view?id=${book.id}" class="book-title">
-                            ${book.title}
+                             ${book.title}
                         </a>
                         <div class="book-meta">${book.author}</div>
                         <div class="rating">
@@ -65,7 +65,7 @@
                     </a>
                     <div class="book-info">
                         <a href="${pageContext.request.contextPath}/book/view?id=${book.id}" class="book-title">
-                            ${book.title}
+                             ${book.title}
                         </a>
                         <div class="book-meta">${book.author}</div>
                         <div class="rating">

@@ -181,6 +181,11 @@ public class BookDAOH2 implements BookDAO {
                     .build();
         }
     }
+
+    @Override
+    public List<BookVO> searchBooks(String category, String keyword) {
+        return findAll(category, keyword);
+    }
     
     
 }

@@ -82,4 +82,8 @@ public class BookService {
         return new BookPage(pagePerCount, totalCount, totalPage, requestPage, startPage, endPage, pre, next, list);
     }
     
+    public List<BookVO> searchBooks(String category, String keyword) {
+		return dao.searchBooks(category, keyword);
+	};
+    
 }
