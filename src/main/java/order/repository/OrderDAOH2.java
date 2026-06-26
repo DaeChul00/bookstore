@@ -15,9 +15,9 @@ public class OrderDAOH2 {
 
     // 1. 주문 저장 (배송 상태 기본값 '주문완료' 안전 처리)
     public int insertOrder(OrderVO order) {
-        String sql = "INSERT INTO ORDERS (member_id, book_id, title, count, order_price, bookimage, delivery_status) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        String status = (order.getDeliveryStatus() != null) ? order.getDeliveryStatus() : "주문완료";
+        String sql = "INSERT INTO ORDERS (member_id, book_id, title, count, order_price, bookimage, delivery_status, order_code) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String status = (order.getDeliveryStatus() != null) ? order.getDeliveryStatus() : "결제완료";
         
         return jdbcTemplate.update(sql, 
             order.getMemberId(), 
@@ -26,7 +26,8 @@ public class OrderDAOH2 {
             order.getCount(), 
             order.getOrderPrice(), 
             order.getBookimage(), 
-            status
+            status,
+            order.getOrderCode()
         );
     }
 
@@ -74,10 +75,10 @@ public class OrderDAOH2 {
         }
     }
 
-    // 4. 관리자용 배송 상태 스위칭 변경 API
-    public int updateDeliveryStatus(int orderId, String status) {
-        String sql = "UPDATE ORDERS SET delivery_status = ? WHERE order_id = ?";
-        return jdbcTemplate.update(sql, status, orderId);
+    // 4. 관리자용 배송 상태 스위칭 변경 API (OrderCode 사용)
+    public int updateDeliveryStatusByCode(String orderCode, String status) {
+        String sql = "UPDATE ORDERS SET delivery_status = ? WHERE order_code = ?";
+        return jdbcTemplate.update(sql, status, orderCode);
     }
     
     // 실시간 비동기 폴링을 위한 단건 배송 상태 텍스트 추출 쿼리

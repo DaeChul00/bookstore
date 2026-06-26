@@ -4,6 +4,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import order.model.CartVO;
 import order.model.OrderVO;
 import order.repository.CartDAOH2;
 import order.repository.OrderDAOH2;
@@ -47,4 +49,29 @@ public class OrderService {
     public OrderVO getOrderById(int orderId) {
         return orderDao.getOrderById(orderId);
     }
+    
+    @Transactional
+    public void confirmPayment(String orderCode, String memberId) {
+        // 1. 장바구니 리스트를 가져와서
+        List<CartVO> cartList = cartDao.findCartByMemberId(memberId);
+        
+        // 2. 루프를 돌며 ORDERS 테이블에 저장해야 합니다.
+        for (CartVO cart : cartList) {
+            OrderVO order = OrderVO.builder()
+                .memberId(memberId)
+                .bookId(cart.getBookId())
+                .title(cart.getTitle())
+                .count(cart.getCount())
+                .orderPrice(cart.getPrice() * cart.getCount())
+                .bookimage(cart.getBookimage())
+                .deliveryStatus("결제완료")
+                .orderCode(orderCode) // 여기서 생성된 orderCode 저장
+                .build();
+            orderDao.insertOrder(order);
+        }
+        
+        // 3. 다 끝난 후 장바구니 비우기
+        cartDao.clearCart(memberId);
+    }
+    
 }

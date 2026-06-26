@@ -10,13 +10,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderVO {
-    private int orderId;          // 주문 번호 (PK)
-    private String memberId;      // 구매자 아이디
-    private int bookId;           // 구매한 책 번호
-    private String title;         // 구매 당시 책 제목
-    private int count;            // 구매 수량
-    private int orderPrice;       // 구매 당시 가격 (단건 결제 총액)
-    private String orderDate;     // 주문 날짜
-    private String bookimage;     // 책 이미지
-    private String deliveryStatus; // 배송 상태 필드
+    private int orderId;          // 기존 PK
+    private String orderCode;     // 토스 결제용 고유 코드
+    private String memberId;
+    private int bookId;
+    private String title;
+    private int count;
+    private int orderPrice;
+    private String orderDate;
+    private String bookimage;
+    private String deliveryStatus;
 }

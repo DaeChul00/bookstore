@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<script src="https://js.tosspayments.com/v1/payment"></script>
 
 <style>
 .cart-container { width: 1000px; margin: 50px auto; }
@@ -132,11 +133,37 @@ function handleDelete(bookId) {
 
 function handleOrder() {
     if (!isLogin) {
-        alert("로그인 후 주문이 가능합니다. 로그인 페이지로 이동합니다.");
+        alert("로그인 후 주문이 가능합니다.");
         location.href = "${pageContext.request.contextPath}/login";
-    } else {
-        location.href = "${pageContext.request.contextPath}/order/buy";
+        return;
     }
+
+    // 1. 서버에 주문 생성 요청 (POST 방식)
+    fetch("${pageContext.request.contextPath}/order/prepare", {
+        method: "POST",
+        headers: {
+            // CSRF 토큰을 헤더에 넣지 않고 body에 넣을 것이므로 Content-Type만 설정
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        // 2. body에 CSRF 토큰과 파라미터명을 함께 담음
+        body: "${_csrf.parameterName}=${_csrf.token}"
+    })
+    .then(response => response.json())
+    .then(data => {
+        // 3. 주문 준비 완료 후 토스 결제창 호출
+        const tossPayments = TossPayments("test_ck_GjLJoQ1aVZp0Bbwb0yl58w6KYe2R");
+        tossPayments.requestPayment('카드', {
+            amount: data.totalPrice,
+            orderId: data.orderId,
+            orderName: data.orderName,
+            successUrl: 'https://marina-elastic-wilder.ngrok-free.dev/order/success',
+            failUrl: 'https://marina-elastic-wilder.ngrok-free.dev/order/fail'
+        });
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("주문 준비 중 오류가 발생했습니다.");
+    });
 }
 
 function getCookie(name) {

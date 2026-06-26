@@ -3,7 +3,10 @@ package order.controller;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -250,5 +254,30 @@ public class OrderController {
         model.addAttribute("order", order); 
         model.addAttribute("contentPage", "/WEB-INF/views/order/order_detail.jsp");
         return "layout/layout";
+    }
+    
+ // 1. [결제 전] 주문 데이터 임시 생성 (DB에 '결제대기' 상태로 저장)
+    @PostMapping("/prepare")
+    @ResponseBody
+    public Map<String, Object> prepareOrder() {
+        String mid = getSecurityLoginId(); // 사용자가 구현한 로그인 ID 추출 메서드
+        List<CartVO> cartList = cartService.getCartList(mid);
+        int total = cartList.stream().mapToInt(c -> c.getPrice() * c.getCount()).sum();
+        
+        String orderCode = "ORDER_" + System.currentTimeMillis();
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", orderCode);
+        response.put("totalPrice", total);
+        response.put("orderName", cartList.get(0).getTitle() + (cartList.size() > 1 ? " 외 " + (cartList.size()-1) + "건" : ""));
+        return response;
+    }
+
+    // 2. [결제 후] 승인 처리 (토스 결제 완료 후 리다이렉트)
+    @RequestMapping("/success")
+    public String orderSuccess(@RequestParam String paymentKey, @RequestParam String orderId) {
+        String mid = getSecurityLoginId();
+        orderService.confirmPayment(orderId, mid);
+        return "redirect:/order/list";
     }
 }
