@@ -16,5 +16,7 @@ public interface MemberService {
 	List<MemberVO> getAllMembers(String sort);
 	void changeRole(String memberId, String role);
 	UserDetails loadUserByUsername(String memberId) throws UsernameNotFoundException;
+	MemberVO findByEmail(String email);
+	
 
 }

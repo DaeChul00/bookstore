@@ -15,4 +15,5 @@ public interface MemberDAO {
 	void updateRole(String memberId, String role);
 	MemberVO findById(String memberId);
 	MemberVO selectById(String memberId);
+	MemberVO findByEmail(String email);
 }

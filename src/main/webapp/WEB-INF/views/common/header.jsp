@@ -3,107 +3,21 @@
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags"%>
 
 <style>
-.search-wrapper {
-	position: relative;
-	width: 380px;
-}
+.search-wrapper { position: relative; width: 380px; }
+.search-box { display: flex; align-items: center; width: 380px; height: 50px; border: 1px solid #ddd; border-radius: 30px; overflow: hidden; }
+.search-box:focus-within { border-color: #2c3e50; box-shadow: 0 0 8px rgba(44, 62, 80, 0.2); background: #fff; }
+.search-box select { border: none; background: transparent; padding: 8px; outline: none; font-size: 14px; cursor: pointer; }
+.search-box input { border: none; background: transparent; padding: 10px; flex: 1; outline: none; font-size: 14px; }
+.search-btn { width: 60px; height: 100%; border: none; background: #2c3e50; color: white; cursor: pointer; border-radius: 0; }
+.search-icon { margin-left: 10px; color: #888; }
 
-.search-box {
-	display: flex;
-	align-items: center;
-	width: 380px;
-	height: 50px;
-	border: 1px solid #ddd;
-	border-radius: 30px;
-	overflow: hidden;
-}
-
-.search-box:focus-within {
-	border-color: #2c3e50;
-	box-shadow: 0 0 8px rgba(44, 62, 80, 0.2);
-	background: #fff;
-}
-
-.search-box select {
-	border: none;
-	background: transparent;
-	padding: 8px;
-	outline: none;
-	font-size: 14px;
-	cursor: pointer;
-}
-
-.search-box input {
-	border: none;
-	background: transparent;
-	padding: 10px;
-	flex: 1;
-	outline: none;
-	font-size: 14px;
-}
-
-.search-btn {
-	width: 60px;
-	height: 100%;
-	border: none;
-	background: #2c3e50;
-	color: white;
-	cursor: pointer;
-	border-radius: 0;
-}
-
-.search-icon {
-	margin-left: 10px;
-	color: #888;
-}
-
-/* 🔍 팀원 heejo2의 실시간 자동완성 결과창 스타일 수호 */
-#searchResult {
-	display: none;
-	position: absolute;
-	top: 100%;
-	left: 0;
-	width: 650px;
-	background: white;
-	border: 1px solid #ddd;
-	z-index: 9999;
-	border-radius: 8px;
-	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.search-left {
-	width: 50%;
-	display: flex;
-	flex-direction: column;
-}
-
-.search-preview {
-	width: 50%;
-	padding: 20px;
-	margin: auto;
-	text-align: center;
-	background: #f8f8f8;
-}
-.search-preview img {
-	width: 150px;
-	height: 220px;
-	object-fit: cover;
-}
-
-.search-item {
-	padding: 12px;
-	border-bottom: 1px solid #eee;
-	cursor: pointer;
-}
-
-.search-item:hover {
-	background: #f5f5f5;
-}
-
-.search-item a {
-	text-decoration: none;
-	color: #333;
-}
+#searchResult { display: none; position: absolute; top: 100%; left: 0; width: 650px; background: white; border: 1px solid #ddd; z-index: 9999; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.search-left { width: 50%; display: flex; flex-direction: column; }
+.search-preview { width: 50%; padding: 20px; margin: auto; text-align: center; background: #f8f8f8; }
+.search-preview img { width: 150px; height: 220px; object-fit: cover; }
+.search-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; }
+.search-item:hover { background: #f5f5f5; }
+.search-item a { text-decoration: none; color: #333; }
 </style>
 
 <header style="border-bottom: 1px solid #eee; background: #fff; width: 100%;">
@@ -152,7 +66,15 @@
 					<a href="${pageContext.request.contextPath}/order/list" style="text-decoration: none; color: #d9534f; font-weight: bold; margin-right: 5px;">📦 주문내역</a>
 				</sec:authorize>
 
-				<span><strong><sec:authentication property="principal.username" /></strong>님</span>
+				<c:choose>
+					<c:when test="${not empty loginUser}">
+						<span><strong>${loginUser.name}</strong>님</span>
+					</c:when>
+					<c:otherwise>
+						<span><strong><sec:authentication property="principal.username" /></strong>님</span>
+					</c:otherwise>
+				</c:choose>
+				
 				<a href="${pageContext.request.contextPath}/member/update" style="color: #666; font-size: 12px; margin-right: 5px;">[정보수정]</a>
 
 				<sec:authorize access="hasRole('ADMIN')">

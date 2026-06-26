@@ -86,7 +86,7 @@ function handleCountChange(bookId, count) {
         var csrfToken = "${_csrf.token}";
 
         var formData = new URLSearchParams();
-        formData.append("cartId", bookId); 
+        formData.append("bookId", bookId);
         formData.append("count", count);    
         formData.append(csrfParameterName, csrfToken);
 
@@ -98,10 +98,10 @@ function handleCountChange(bookId, count) {
             body: formData.toString()
         })
         .then(function(response) { 
-            return response.json(); 
+            return response.text(); // 🛠️ 순수 텍스트 응답 처리
         })
         .then(function(data) {
-            if (data.status === "success") {
+            if (data === "success") {
                 location.reload();
             } else {
                 alert("수량 변경 반영에 실패했습니다.");
@@ -122,8 +122,6 @@ function handleDelete(bookId) {
         if (isLogin) {
             var form = document.getElementById("cartActionForm");
             form.action = "${pageContext.request.contextPath}/order/deleteCart";
-            
-            // 💡 여기서 id가 actionBookId인 인풋에 bookId(실제 컬럼에선 BOOK_ID 타깃)를 꽂아 넘깁니다.
             document.getElementById("actionBookId").value = bookId;
             form.submit();
         } else {

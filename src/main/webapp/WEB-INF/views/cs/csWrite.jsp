@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
+<%@ taglib prefix="sec"
+	uri="http://www.springframework.org/security/tags"%>
 
 <div class="container bg-white p-5 rounded shadow-sm">
 	<h2 class="text-center mb-4">문의사항 작성</h2>
@@ -33,11 +35,11 @@
 						placeholder="제목을 입력하세요" required></td>
 				</tr>
 
-				<!-- 작성자 -->
 				<tr>
 					<th class="table-light text-center">작성자</th>
-					<td><input type="text" name="userName" class="form-control"
-						placeholder="작성자 이름" required></td>
+					<td><span class="badge bg-primary fs-6"> <sec:authentication
+								property="principal.username" />
+					</span></td>
 				</tr>
 
 				<!-- 내용 -->

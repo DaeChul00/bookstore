@@ -43,6 +43,10 @@ public class BookController {
 	    model.addAttribute("topRatedList", topRatedList);
 	    model.addAttribute("newBookList", newBookList);
 	    model.addAttribute("contentPage", "/WEB-INF/views/main.jsp");
+	    
+	    // 메인 페이지에서만 배너 표시
+	    model.addAttribute("showBanner", true);
+	    
 	    return "layout/layout";
 	}
 
@@ -121,7 +125,7 @@ public class BookController {
 			} else {
 				ra.addFlashAttribute("message", "fail");
 			}
-			return "redirect:/book/list";
+			return "redirect:/admin/book/list";
 		}
 
 		ra.addFlashAttribute("kind", "update");
@@ -130,7 +134,7 @@ public class BookController {
 		} else {
 			ra.addFlashAttribute("message", "fail");
 		}
-		return "redirect:/book/view?id=" + bk.getId();
+		return "redirect:/admin/book/list";
 	}
 	
 	@RequestMapping("delete")
@@ -145,10 +149,10 @@ public class BookController {
 	    } else {
 	        ra.addFlashAttribute("message", "fail");
 	    }
-	    return "redirect:/book/list";
+	    return "redirect:/admin/book/list"; 
 	}
 	
-	// 🛒 [대철님의 무기]: ISBN 기반 카카오 외부 API 자동완성 인프라 보존
+	// ISBN 기반 카카오 외부 API 자동완성 인프라 보존
 	@ResponseBody
 	@RequestMapping(value = "/fetchBookInfo", method = RequestMethod.GET, produces = "application/json; charset=UTF-8")
 	public BookVO fetchBookInfo(@RequestParam("isbn") String isbn) {
@@ -212,7 +216,7 @@ public class BookController {
 		return null;
 	}
 
-	// 🔍 [팀원 heejo2 기능 통합]: 메인화면 실시간 검색창 처리용 Ajax 엔드포인트 완벽 흡수
+	// 메인화면 실시간 검색창 처리용 Ajax 엔드포인트 완벽 흡수
 	@RequestMapping("search")
 	@ResponseBody
 	public List<BookVO> search(

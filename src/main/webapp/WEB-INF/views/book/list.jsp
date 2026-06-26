@@ -23,7 +23,7 @@
 
 <div class="book-container">
 	<div class="headline">
-		<h2>📚 도서 검색 결과</h2>
+		<h2>📚 도서 목록</h2>
 		<sec:authorize access="hasRole('ADMIN')">
 			<a href="${pageContext.request.contextPath}/book/insertform" class="btn btn-sm btn-outline-dark">➕ 새 도서 추가</a>
 		</sec:authorize>

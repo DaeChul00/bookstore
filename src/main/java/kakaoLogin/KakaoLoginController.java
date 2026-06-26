@@ -1,4 +1,4 @@
-package book.controller;
+package kakaoLogin;
 
 import java.net.URLDecoder;
 import java.util.Collections;
@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import member.model.MemberVO;
+import member.repository.MemberDAO;
 import order.model.CartVO;
 import order.service.CartService;
 
@@ -36,17 +37,25 @@ public class KakaoLoginController {
 
     @Autowired
     private CartService cartService; 
+    
+    @Autowired
+    private MemberDAO memberDAO;
 
     private static final String CLIENT_ID = "6d56b80b09849d754df794b8ae017307";
     private static final String CLIENT_SECRET = "k16pKYIwdh9UfS551SqEYYYKhcefmleW";
-    private static final String REDIRECT_URI = "http://localhost:8888/kakao/callback";
+//    private static final String REDIRECT_URI =
+//    	    "https://upriver-grope-equate.ngrok-free.dev/kakao/callback";
+    private static final String REDIRECT_URI =
+    		"http://localhost:8888/kakao/callback";
+    
 
     @GetMapping("/kakao/login")
     public String kakaoLogin() {
         String kakaoUrl = "https://kauth.kakao.com/oauth/authorize"
                 + "?client_id=" + CLIENT_ID
                 + "&redirect_uri=" + REDIRECT_URI
-                + "&response_type=code";
+                + "&response_type=code"
+        		+ "&prompt=login";
         return "redirect:" + kakaoUrl;
     }
 
@@ -85,6 +94,19 @@ public class KakaoLoginController {
             Long kakaoId = userNode.get("id").asLong();
             String nickname = userNode.get("properties").get("nickname").asText();
             String username = "kakao_" + kakaoId; 
+            
+            
+            MemberVO member = memberDAO.findById(username);
+            if (member == null) {
+                MemberVO vo = new MemberVO();
+                vo.setMemberId(username);
+                vo.setName(nickname);
+                vo.setPassword(java.util.UUID.randomUUID().toString());
+                vo.setEmail(username + "@kakao.local");
+                vo.setRole("USER");
+
+                memberDAO.signup(vo);
+            }
 
             // 3. 세션 및 Spring Security 인증 객체 생성
             MemberVO loginUser = new MemberVO();
@@ -92,11 +114,17 @@ public class KakaoLoginController {
             loginUser.setName(nickname);
             loginUser.setRole("USER");
             session.setAttribute("loginUser", loginUser);
+            
 
             // Spring Security 컨텍스트에 강제 인증 주입
             User principal = new User(username, "", Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
+            
+            request.getSession().setAttribute(
+                    "SPRING_SECURITY_CONTEXT",
+                    SecurityContextHolder.getContext()
+            );
             
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {

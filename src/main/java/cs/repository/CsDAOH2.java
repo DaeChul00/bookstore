@@ -10,6 +10,7 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
 import cs.model.CsVO;
 
 @Repository
@@ -22,38 +23,41 @@ public class CsDAOH2 implements CsDAO {
     public List<CsVO> findAll() {
         List<CsVO> list = new ArrayList<>();
         String sql = "SELECT * FROM CS ORDER BY ID DESC";
+
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
+
             while (rs.next()) {
                 CsVO vo = new CsVO();
-                vo.setId(rs.getInt("id"));
-                vo.setTitle(rs.getString("title"));
+                vo.setId(rs.getInt("ID"));
+                vo.setTitle(rs.getString("TITLE"));
+                vo.setUserName(rs.getString("USERNAME"));
+                vo.setCreatedAt(rs.getTimestamp("CREATED_AT"));
 
-                vo.setUserName(rs.getString("writer")); 
-
-                vo.setCreatedAt(rs.getTimestamp("regdate")); 
-                
                 list.add(vo);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return list;
     }
 
     @Override
     public int save(CsVO cv) {
-        String sql = "INSERT INTO CS (CATEGORY, TITLE, CONTENT, WRITER) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO CS (CATEGORY, TITLE, CONTENT, USERNAME) VALUES (?, ?, ?, ?)";
+
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, cv.getCategory()); 
+
+            ps.setString(1, cv.getCategory());
             ps.setString(2, cv.getTitle());
             ps.setString(3, cv.getContent());
-            ps.setString(4, cv.getUserName()); 
-            
+            ps.setString(4, cv.getUserName());
+
             return ps.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
@@ -63,36 +67,48 @@ public class CsDAOH2 implements CsDAO {
     @Override
     public CsVO findById(int id) {
         String sql = "SELECT * FROM CS WHERE ID = ?";
+
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, id);
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     CsVO vo = new CsVO();
-                    vo.setId(rs.getInt("id"));
-                    vo.setTitle(rs.getString("title"));
-                    vo.setContent(rs.getString("content"));
-                    vo.setUserName(rs.getString("writer"));
-                    vo.setCreatedAt(rs.getTimestamp("regdate"));
-                    
+
+                    vo.setId(rs.getInt("ID"));
+                    vo.setTitle(rs.getString("TITLE"));
+                    vo.setContent(rs.getString("CONTENT"));
+                    vo.setCategory(rs.getString("CATEGORY"));
+                    vo.setUserName(rs.getString("USERNAME"));
+                    vo.setCreatedAt(rs.getTimestamp("CREATED_AT"));
+
                     return vo;
                 }
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 
     @Override
     public int update(CsVO cv) {
-        String sql = "UPDATE CS SET TITLE = ?, CONTENT = ? WHERE ID = ?";
+        String sql = "UPDATE CS SET TITLE = ?, CONTENT = ?, CATEGORY = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?";
+
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, cv.getTitle());
             ps.setString(2, cv.getContent());
-            ps.setInt(3, cv.getId());
+            ps.setString(3, cv.getCategory());
+            ps.setInt(4, cv.getId());
+
             return ps.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
@@ -102,10 +118,14 @@ public class CsDAOH2 implements CsDAO {
     @Override
     public int delete(int id) {
         String sql = "DELETE FROM CS WHERE ID = ?";
+
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, id);
+
             return ps.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
