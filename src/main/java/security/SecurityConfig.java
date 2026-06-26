@@ -6,6 +6,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+import member.model.MemberVO;
+import member.repository.MemberDAO;
 import order.model.CartVO;
 import order.service.CartService;
 
@@ -27,6 +30,9 @@ import order.service.CartService;
 @SuppressWarnings("deprecation")
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+	@Autowired
+	private MemberDAO memberDAO;
+	
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
@@ -94,6 +100,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             @Override
             public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
                 String mid = authentication.getName();
+                HttpSession session = request.getSession();
+                MemberVO dbMember = memberDAO.findById(mid);
+                if (dbMember != null) {
+                    // 카카오 로그인과 동일하게 완전한 MemberVO 객체를 세션에 저장
+                    session.setAttribute("loginUser", dbMember);
+                }
                 Cookie[] cookies = request.getCookies();
                 
                 // 비회원 장바구니 쿠키가 실제 존재했는지 판단할 가드 변수

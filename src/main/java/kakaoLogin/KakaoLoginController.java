@@ -98,7 +98,7 @@ public class KakaoLoginController {
             
             MemberVO member = memberDAO.findById(username);
             if (member == null) {
-                MemberVO vo = new MemberVO();
+            	MemberVO vo = new MemberVO();
                 vo.setMemberId(username);
                 vo.setName(nickname);
                 vo.setPassword(java.util.UUID.randomUUID().toString());
@@ -113,7 +113,7 @@ public class KakaoLoginController {
             loginUser.setMemberId(username);
             loginUser.setName(nickname);
             loginUser.setRole("USER");
-            session.setAttribute("loginUser", loginUser);
+            session.setAttribute("loginUser", member);
             
 
             // Spring Security 컨텍스트에 강제 인증 주입
