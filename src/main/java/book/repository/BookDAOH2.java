@@ -19,9 +19,10 @@ public class BookDAOH2 implements BookDAO {
 
     @Override
     public int insert(BookVO book) {
-        String sql = "INSERT INTO BOOK (isbn, title, author, publisher, publictiondate, price, content, bookimage, rating) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // ⚙️ 수정: VALUES에서 rating 제거
+        String sql = "INSERT INTO BOOK (isbn, title, author, publisher, publictiondate, price, content, bookimage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         return jdbcTemplate.update(sql, book.getIsbn(), book.getTitle(), book.getAuthor(), book.getPublisher(),
-                book.getPublictiondate(), book.getPrice(), book.getContent(), book.getBookimage(), book.getRating());
+                book.getPublictiondate(), book.getPrice(), book.getContent(), book.getBookimage());
     }
 
     @Override
@@ -45,9 +46,10 @@ public class BookDAOH2 implements BookDAO {
 
     @Override
     public int update(BookVO book) {
-        String sql = "UPDATE BOOK SET isbn=?, title=?, author=?, publisher=?, publictiondate=?, price=?, content=?, bookimage=?, rating=? WHERE id=?";
+        // ⚙️ 수정: SET 구문에서 rating=? 제거
+        String sql = "UPDATE BOOK SET isbn=?, title=?, author=?, publisher=?, publictiondate=?, price=?, content=?, bookimage=? WHERE id=?";
         return jdbcTemplate.update(sql, book.getIsbn(), book.getTitle(), book.getAuthor(), book.getPublisher(),
-                book.getPublictiondate(), book.getPrice(), book.getContent(), book.getBookimage(), book.getRating(), book.getId());
+                book.getPublictiondate(), book.getPrice(), book.getContent(), book.getBookimage(), book.getId());
     }
 
     @Override
@@ -65,13 +67,16 @@ public class BookDAOH2 implements BookDAO {
 
     @Override
     public List<BookVO> findTopRatedBooks() {
-        String sql = "SELECT * FROM BOOK ORDER BY RATING DESC LIMIT 5";
-        return jdbcTemplate.query(sql, new BookMapper());
+        // ⚙️ 수정: 테이블에 RATING이 없으므로 REVIEW 평점 평균(AVG_RATING)을 계산해 상위 5개 정렬
+        String sql = "SELECT B.*, " +
+                     "COALESCE((SELECT AVG(RATING) FROM REVIEW WHERE BOOK_ID = B.ID), 0.0) AS AVG_RATING, " +
+                     "COALESCE((SELECT COUNT(*) FROM REVIEW WHERE BOOK_ID = B.ID), 0) AS REVIEW_COUNT " +
+                     "FROM BOOK B ORDER BY AVG_RATING DESC LIMIT 5";
+        return jdbcTemplate.query(sql, new BookMapperWithReview());
     }
 
     @Override
     public List<BookVO> findNewBooks() {
-        // ⭕ 신간 도서 조회 시 데이터 크래시 방지를 위해 Review 매퍼 가동
         String sql = "SELECT B.*, " +
                      "COALESCE((SELECT AVG(RATING) FROM REVIEW WHERE BOOK_ID = B.ID), 0.0) AS AVG_RATING, " +
                      "COALESCE((SELECT COUNT(*) FROM REVIEW WHERE BOOK_ID = B.ID), 0) AS REVIEW_COUNT " +
@@ -103,10 +108,11 @@ public class BookDAOH2 implements BookDAO {
 
     @Override
     public List<BookVO> getBestBooks() {
+        // ⚙️ 수정: 터졌던 에러의 주원인 구문 해결 (B.RATING 대신 계산된 서브쿼리 결과인 AVG_RATING DESC로 정렬)
         String sql = "SELECT B.*, " +
                      "COALESCE((SELECT AVG(RATING) FROM REVIEW WHERE BOOK_ID = B.ID), 0.0) AS AVG_RATING, " +
                      "COALESCE((SELECT COUNT(*) FROM REVIEW WHERE BOOK_ID = B.ID), 0) AS REVIEW_COUNT " +
-                     "FROM BOOK B ORDER BY B.RATING DESC LIMIT 5";
+                     "FROM BOOK B ORDER BY AVG_RATING DESC LIMIT 5";
         return jdbcTemplate.query(sql, new BookMapperWithReview());
     }
 
@@ -142,7 +148,7 @@ public class BookDAOH2 implements BookDAO {
         return category;
     }
 
-    // 기본 매퍼 데이터 타입 정상화 완료
+    // 기본 매퍼 (조인 없는 기본 도서 조회용)
     private static final class BookMapper implements RowMapper<BookVO> {
         @Override
         public BookVO mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -154,17 +160,19 @@ public class BookDAOH2 implements BookDAO {
                     .publisher(rs.getString("PUBLISHER"))
                     .publictiondate(rs.getString("PUBLICTIONDATE"))
                     .price(rs.getInt("PRICE"))
-                    .content(rs.getString("CONTENT")) // ⭕ 에러 완전 해결: 기존 rs.getInt 구조를 안전한 String으로 교정
+                    .content(rs.getString("CONTENT"))
                     .bookimage(rs.getString("BOOKIMAGE"))
-                    .rating(rs.getFloat("RATING"))
+                    // ⚙️ 수정: DB에 더이상 RATING 컬럼이 없으므로 rs.getFloat("RATING") 제거하고 기본값 0.0f 할당
+                    .rating(0.0f) 
                     .build();
         }
     }
 
-    // 리뷰 조인 매퍼 데이터 타입 정상화 완료
+    // 리뷰 조인 매퍼 (별점 및 리뷰 개수 포함 조회용)
     private static final class BookMapperWithReview implements RowMapper<BookVO> {
         @Override
         public BookVO mapRow(ResultSet rs, int rowNum) throws SQLException {
+            double avgRating = rs.getDouble("AVG_RATING");
             return BookVO.builder()
                     .id(rs.getInt("ID"))
                     .isbn(rs.getString("ISBN"))
@@ -173,10 +181,11 @@ public class BookDAOH2 implements BookDAO {
                     .publisher(rs.getString("PUBLISHER"))
                     .publictiondate(rs.getString("PUBLICTIONDATE"))
                     .price(rs.getInt("PRICE"))
-                    .content(rs.getString("CONTENT")) // ⭕ 에러 완전 해결: 기존 rs.getInt 구조를 안전한 String으로 교정
+                    .content(rs.getString("CONTENT"))
                     .bookimage(rs.getString("BOOKIMAGE"))
-                    .rating(rs.getFloat("RATING"))
-                    .avgRating(rs.getDouble("AVG_RATING"))
+                    // ⚙️ 수정: 오리지널 rating 변수 자리에도 연산된 평균 평점(avgRating)을 넣어주어 프론트 깨짐 방지
+                    .rating((float) avgRating) 
+                    .avgRating(avgRating)
                     .reviewCount(rs.getInt("REVIEW_COUNT"))
                     .build();
         }
@@ -186,6 +195,4 @@ public class BookDAOH2 implements BookDAO {
     public List<BookVO> searchBooks(String category, String keyword) {
         return findAll(category, keyword);
     }
-    
-    
 }

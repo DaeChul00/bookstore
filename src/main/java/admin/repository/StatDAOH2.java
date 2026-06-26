@@ -1,10 +1,13 @@
 package admin.repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import book.model.BookVO;
@@ -41,14 +44,35 @@ public class StatDAOH2 implements StatDAO{
 
 	@Override
 	public List<BookVO> getTopRatedBooks() {
-		String sql = "SELECT * FROM book ORDER BY rating DESC LIMIT 5";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            BookVO book = new BookVO();
-            book.setId(rs.getInt("id"));
-            book.setTitle(rs.getString("title"));
-            book.setRating(rs.getFloat("rating"));
-            return book;
-        });
+	    // REVIEW 테이블의 별점을 실시간 평균 내어(AVG_RATING) 정렬하도록 수정
+	    String sql = "SELECT B.*, " +
+	                 "COALESCE((SELECT AVG(RATING) FROM REVIEW WHERE BOOK_ID = B.ID), 0.0) AS AVG_RATING, " +
+	                 "COALESCE((SELECT COUNT(*) FROM REVIEW WHERE BOOK_ID = B.ID), 0) AS REVIEW_COUNT " +
+	                 "FROM BOOK B ORDER BY AVG_RATING DESC LIMIT 5";
+	                 
+	    // 만약 StatDAOH2 내부에 BookMapperWithReview가 없다면, 
+	    // 기존에 작성했던 BookDAOH2에 있는 BookMapperWithReview 클래스를 가져오거나 
+	    // 아래 매퍼를 StatDAOH2 파일 하단에 추가해서 사용해야 합니다.
+	    return jdbcTemplate.query(sql, new RowMapper<BookVO>() {
+	        @Override
+	        public BookVO mapRow(ResultSet rs, int rowNum) throws SQLException {
+	            double avgRating = rs.getDouble("AVG_RATING");
+	            return BookVO.builder()
+	                    .id(rs.getInt("ID"))
+	                    .isbn(rs.getString("ISBN"))
+	                    .title(rs.getString("TITLE"))
+	                    .author(rs.getString("AUTHOR"))
+	                    .publisher(rs.getString("PUBLISHER"))
+	                    .publictiondate(rs.getString("PUBLICTIONDATE"))
+	                    .price(rs.getInt("PRICE"))
+	                    .content(rs.getString("CONTENT"))
+	                    .bookimage(rs.getString("BOOKIMAGE"))
+	                    .rating((float) avgRating) // 옛날 변수명 호환용
+	                    .avgRating(avgRating)
+	                    .reviewCount(rs.getInt("REVIEW_COUNT"))
+	                    .build();
+	        }
+	    });
 	}
 	@Override
 	public List<Map<String, Object>> getMonthlySales() {
