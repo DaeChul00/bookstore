@@ -167,14 +167,14 @@ public class OrderController {
 
     // 3. 비동기 수량 변경 처리 (AJAX 호출 대응)
     @ResponseBody
-    @RequestMapping(value = "/updateCartAsync", method = RequestMethod.POST)
-    public String updateCartAsync(@RequestParam("bookId") int bookId, @RequestParam("count") int count) {
-        String mid = getSecurityLoginId();
-        if (mid == null) return "login_required";
-        
-        boolean ok = cartService.updateCartCount(mid, bookId, count);
-        return ok ? "success" : "fail";
-    }
+	@RequestMapping(value = "/updateCartAsync", method = RequestMethod.POST)
+	public String updateCartAsync(@RequestParam("bookId") int bookId, @RequestParam("count") int count) {
+		String mid = getSecurityLoginId();
+		if (mid == null) return "login_required";
+		
+		boolean ok = cartService.updateCartCount(mid, bookId, count);
+		return ok ? "success" : "fail";
+	}
 
     // 4. 장바구니 항목 개별 삭제 처리
     @RequestMapping("/deleteCart")
