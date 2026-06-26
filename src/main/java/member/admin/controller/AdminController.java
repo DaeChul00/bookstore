@@ -59,7 +59,6 @@ public class AdminController {
     }
     
     // 관리자 전용 전체 회원 주문/배송 목록 조회
-
     @RequestMapping("/order/list")
     public String adminOrderList(Model model) {
         model.addAttribute("adminOrderList", orderDAOH2.findAllOrdersForAdmin());
@@ -67,7 +66,7 @@ public class AdminController {
         return "layout/layout";
     }
 
-    // 관리자용 배송 상태 변경 처리 (시큐리티 호환을 위해 POST 권장)
+    // 관리자용 배송 상태 변경 처리 (스프링 시큐리티 CSRF 가드 결합 버전 유지)
     @RequestMapping(value = "/order/updateStatus", method = RequestMethod.POST)
     public String updateDeliveryStatus(@RequestParam int orderId, @RequestParam String deliveryStatus) {
         orderDAOH2.updateDeliveryStatus(orderId, deliveryStatus);

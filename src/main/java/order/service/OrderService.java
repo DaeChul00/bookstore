@@ -17,7 +17,7 @@ public class OrderService {
     @Autowired
     private CartDAOH2 cartDao;
 
-    // 주문 완료 후 장바구니 비우기 트랜잭션 병합 완료
+    // 주문 완료 후 장바구니 일괄 비우기 트랜잭션 인프라 완벽 보존
     @Transactional
     public boolean placeOrder(String memberId, List<OrderVO> orderList) {
         int resultCount = 0;
@@ -33,7 +33,18 @@ public class OrderService {
         return false;
     }
 
+    // 일반 유저 마이페이지 주문 리스트 조회 메서드 보존
     public List<OrderVO> findOrdersByMemberId(String memberId) {
         return orderDao.findOrdersByMemberId(memberId);
+    }
+	
+    // 실시간 배송 상태 비동기 갱신용 서비스 엔진
+    public String getOrderStatus(int orderId) {
+        return orderDao.getDeliveryStatus(orderId);
+    }
+	
+    // 배송 정보 상세 페이지 단건 조회용 서비스 엔진
+    public OrderVO getOrderById(int orderId) {
+        return orderDao.getOrderById(orderId);
     }
 }

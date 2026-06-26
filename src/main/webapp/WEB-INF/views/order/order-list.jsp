@@ -11,12 +11,12 @@
 	<table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
 		<thead style="background-color: #f8f9fa; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd;">
 			<tr style="height: 50px; text-align: center; font-size: 14px;">
-				<th style="width: 15%;">이미지</th>
-				<th style="width: 30%;">상품 정보</th>
+				<th style="width: 12%;">이미지</th>
+				<th style="width: 33%;">상품 정보</th>
 				<th style="width: 10%;">수량</th>
 				<th style="width: 15%;">결제 금액</th>
 				<th style="width: 15%;">주문 일자</th>
-				<th style="width: 15%;">리뷰 및 배송</th>
+				<th style="width: 15%;">배송 상태 및 리뷰</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -28,16 +28,22 @@
 				</c:when>
 				<c:otherwise>
 					<c:forEach var="order" items="${orderList}">
-						<tr style="height: 110px; text-align: center; border-bottom: 1px solid #eee;">
+						<tr style="height: 120px; text-align: center; border-bottom: 1px solid #eee;">
 							<td><img src="${order.bookimage}" style="width: 60px; height: 85px; object-fit: cover; border-radius: 4px; box-shadow: 1px 1px 5px rgba(0,0,0,0.1);"></td>
 							<td style="text-align: left; padding-left: 20px;">
-								<a href="${pageContext.request.contextPath}/book/view?id=${order.bookId}" style="font-weight: bold; color: #2c3e50; text-decoration: none;">${order.title}</a>
+								<a href="${pageContext.request.contextPath}/order/detail?orderId=${order.orderId}" style="font-weight: bold; color: #2c3e50; text-decoration: none; display:block; margin-bottom:5px;">${order.title}</a>
+								<small><a href="${pageContext.request.contextPath}/book/view?id=${order.bookId}" style="color:#777; text-decoration:none;">📖 도서 정보 상세보기</a></small>
 							</td>
 							<td><strong>${order.count}개</strong></td>
 							<td><span style="color: #e67e22; font-weight: bold;"><fmt:formatNumber value="${order.orderPrice}" type="number"/>원</span></td>
 							<td style="font-size: 13px; color: #666;">${order.orderDate}</td>
 							<td>
-								<button type="button" class="btn btn-sm btn-outline-primary mb-2" onclick="openReviewModal('${order.bookId}', '${order.title}')">✍️ 리뷰 작성</button>
+								<div class="mb-2">
+									<span id="status-${order.orderId}" class="badge ${order.deliveryStatus eq '배송완료' ? 'bg-success' : (order.deliveryStatus eq '배송중' ? 'bg-info text-white' : 'bg-secondary')}" style="font-size: 12px; padding: 5px 10px; display:inline-block;">
+	                                    ${order.deliveryStatus}
+	                                </span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:11px; padding:2px 6px;" onclick="openReviewModal('${order.bookId}', '${order.title}')">✍️ 리뷰 작성</button>
 							</td>
 						</tr>
 					</c:forEach>
@@ -112,5 +118,28 @@ $(document).ready(function() {
 			}
 		});
 	});
+
+	// 5초마다 배송 상태 비동기 갱신 백그라운드 엔진 가동
+    setInterval(function() {
+        document.querySelectorAll('[id^="status-"]').forEach(el => {
+            const orderId = el.id.split('-')[1];
+            fetch('${pageContext.request.contextPath}/order/status?orderId=' + orderId)
+            .then(response => response.text())
+            .then(data => {
+                if (el.innerText.trim() !== data.trim()) {
+                    el.innerText = data.trim();
+                    // 상태별 클래스 동적 변환
+                    if(data.trim() === '배송완료') {
+                    	el.className = "badge bg-success";
+                    } else if(data.trim() === '배송중') {
+                    	el.className = "badge bg-info text-white";
+                    } else {
+                    	el.className = "badge bg-secondary";
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    }, 5000);
 });
 </script>

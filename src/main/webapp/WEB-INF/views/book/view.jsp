@@ -86,7 +86,10 @@
 
 <script>
 function addCart(id) {
-    /
+	if (!id) {
+        alert("유효하지 않은 상품 번호입니다.");
+        return;
+    }
     location.href = "${pageContext.request.contextPath}/order/addCart?bookId=" + id + "&count=1";
 }
 </script>

@@ -13,7 +13,7 @@ public class OrderDAOH2 {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // 1. 주문 저장 (배송 상태 '주문완료' 기본 부여)
+    // 1. 주문 저장 (배송 상태 기본값 '주문완료' 안전 처리)
     public int insertOrder(OrderVO order) {
         String sql = "INSERT INTO ORDERS (member_id, book_id, title, count, order_price, bookimage, delivery_status) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -30,23 +30,22 @@ public class OrderDAOH2 {
         );
     }
 
-    // 2. 일반 유저용 본인 마이페이지 주문 내역 조회 (중복 서브 묶음 연산 구조)
+    // 2. 일반 유저용 마이페이지 주문 리스트 조회 (대철님 그룹화 정렬 쿼리 고수)
     public List<OrderVO> findOrdersByMemberId(String memberId) {
-        String sql = "SELECT BOOK_ID, TITLE, BOOKIMAGE, SUM(COUNT) AS TOTAL_COUNT, " +
-                     "SUM(ORDER_PRICE) AS TOTAL_PRICE, MAX(ORDER_DATE) AS LATEST_DATE " +
+        String sql = "SELECT ORDER_ID, BOOK_ID, TITLE, BOOKIMAGE, COUNT, ORDER_PRICE, ORDER_DATE, DELIVERY_STATUS " +
                      "FROM ORDERS " +
                      "WHERE MEMBER_ID = ? " +
-                     "GROUP BY BOOK_ID, TITLE, BOOKIMAGE " +
-                     "ORDER BY LATEST_DATE DESC";
-        
+                     "ORDER BY ORDER_ID DESC";
         try {
             return jdbcTemplate.query(sql, (rs, rowNum) -> OrderVO.builder()
+                .orderId(rs.getInt("ORDER_ID"))
                 .bookId(rs.getInt("BOOK_ID"))
                 .title(rs.getString("TITLE"))
                 .bookimage(rs.getString("BOOKIMAGE"))
-                .count(rs.getInt("TOTAL_COUNT"))
-                .orderPrice(rs.getInt("TOTAL_PRICE"))
-                .orderDate(rs.getTimestamp("LATEST_DATE") != null ? rs.getTimestamp("LATEST_DATE").toString() : null)
+                .count(rs.getInt("COUNT"))
+                .orderPrice(rs.getInt("ORDER_PRICE"))
+                .orderDate(rs.getTimestamp("ORDER_DATE") != null ? rs.getTimestamp("ORDER_DATE").toString() : null)
+                .deliveryStatus(rs.getString("DELIVERY_STATUS"))
                 .build(), memberId);
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,7 +53,7 @@ public class OrderDAOH2 {
         }
     }
 
-    // 3. 관리자 대시보드용 원상 복구 전체 내역 조회 API
+    // 3. 관리자 대시보드용 전체 내역 조회 API
     public List<OrderVO> findAllOrdersForAdmin() {
         String sql = "SELECT * FROM ORDERS ORDER BY order_date DESC";
         try {
@@ -64,7 +63,7 @@ public class OrderDAOH2 {
                 .bookId(rs.getInt("book_id"))
                 .title(rs.getString("title"))
                 .count(rs.getInt("count"))
-                .orderPrice(rs.getBigDecimal("order_price").intValue())
+                .orderPrice(rs.getInt("order_price"))
                 .bookimage(rs.getString("bookimage"))
                 .orderDate(rs.getTimestamp("order_date") != null ? rs.getTimestamp("order_date").toString() : null)
                 .deliveryStatus(rs.getString("delivery_status"))
@@ -75,9 +74,39 @@ public class OrderDAOH2 {
         }
     }
 
-    // 4. 관리자용 배송 상태 스위칭 변경 API 
+    // 4. 관리자용 배송 상태 스위칭 변경 API
     public int updateDeliveryStatus(int orderId, String status) {
         String sql = "UPDATE ORDERS SET delivery_status = ? WHERE order_id = ?";
         return jdbcTemplate.update(sql, status, orderId);
+    }
+    
+    // 실시간 비동기 폴링을 위한 단건 배송 상태 텍스트 추출 쿼리
+    public String getDeliveryStatus(int orderId) {
+        String sql = "SELECT delivery_status FROM ORDERS WHERE order_id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, String.class, orderId);
+        } catch (Exception e) {
+            return "정보없음";
+        }
+    }
+
+    // 특정 단건 주문 상세 조회 바인딩용 쿼리
+    public OrderVO getOrderById(int orderId) {
+        String sql = "SELECT * FROM ORDERS WHERE order_id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> OrderVO.builder()
+                .orderId(rs.getInt("order_id"))
+                .memberId(rs.getString("member_id"))
+                .bookId(rs.getInt("book_id"))
+                .title(rs.getString("title"))
+                .count(rs.getInt("count"))
+                .orderPrice(rs.getInt("order_price"))
+                .bookimage(rs.getString("bookimage"))
+                .orderDate(rs.getTimestamp("order_date") != null ? rs.getTimestamp("order_date").toString() : null)
+                .deliveryStatus(rs.getString("delivery_status"))
+                .build(), orderId);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -60,10 +60,8 @@ public class OrderController {
         String mid = getSecurityLoginId();
         
         if (mid != null) {
-            // [회원 상태]: DB에서 적재된 리스트를 가져옵니다.
             model.addAttribute("cartList", cartService.getCartList(mid));
         } else {
-            // [비회원 상태]: 브라우저 guestCart 쿠키를 디코딩 및 파싱하여 도서 정보와 결합합니다.
             List<CartVO> guestCartList = new ArrayList<>();
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
@@ -101,7 +99,7 @@ public class OrderController {
         return "layout/layout";
     }
 
-    // 회원 및 비회원 겸용 장바구니 담기 엔드포인트
+    // 2. 장바구니 담기
     @RequestMapping("/addCart")
     public String addCart(@RequestParam("bookId") int bookId, 
                           @RequestParam("count") int count,
@@ -111,7 +109,6 @@ public class OrderController {
         String mid = getSecurityLoginId();
         
         if (mid != null) {
-            // 1) 회원인 경우 즉시 DB 연동 실행
             CartVO cart = CartVO.builder()
                             .memberId(mid)
                             .bookId(bookId)
@@ -119,7 +116,6 @@ public class OrderController {
                             .build();
             cartService.addCart(cart);
         } else {
-            // 2) 비회원인 경우 브라우저 쿠키에 적재 처리
             Cookie[] cookies = request.getCookies();
             String guestCartValue = "";
             List<java.util.Map<String, Object>> cartList = new ArrayList<>();
@@ -155,7 +151,7 @@ public class OrderController {
                 String jsonStr = mapper.writeValueAsString(cartList);
                 Cookie cartCookie = new Cookie("guestCart", URLEncoder.encode(jsonStr, "UTF-8"));
                 cartCookie.setPath("/");
-                cartCookie.setMaxAge(30 * 24 * 60 * 60); // 30일 보존
+                cartCookie.setMaxAge(30 * 24 * 60 * 60);
                 response.addCookie(cartCookie);
                 
             } catch (Exception e) {
@@ -165,7 +161,7 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
-    // 3. 비동기 수량 변경 처리 (AJAX 호출 대응)
+    // 3. 비동기 수량 변경 처리 (대철 수량 제어)
     @ResponseBody
 	@RequestMapping(value = "/updateCartAsync", method = RequestMethod.POST)
 	public String updateCartAsync(@RequestParam("bookId") int bookId, @RequestParam("count") int count) {
@@ -176,7 +172,7 @@ public class OrderController {
 		return ok ? "success" : "fail";
 	}
 
-    // 4. 장바구니 항목 개별 삭제 처리
+    // 4. 장바구니 삭제
     @RequestMapping("/deleteCart")
     public String deleteCart(@RequestParam("cartId") int bookId) {
         String mid = getSecurityLoginId();
@@ -186,7 +182,7 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
-    // 5. 도서 통합 결제 및 구매 프로세스 실행
+    // 5. 결제 및 주문완료 프로세스
     @RequestMapping("/buy")
     public String buy() {
         String mid = getSecurityLoginId();
@@ -212,7 +208,7 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
-    // 6. 나의 주문 내역 조회 및 출력
+    // 6. 나의 주문 내역 조회
     @RequestMapping("/list")
     public String orderList(Model model) {
         String mid = getSecurityLoginId();
@@ -224,24 +220,35 @@ public class OrderController {
         return "layout/layout";
     }
     
-    // 7. 중복 리뷰 가드가 작용하는 AJAX 한줄평 등록
+    // 7. 한줄평 리뷰 등록 가드
     @ResponseBody
     @RequestMapping(value = "/review-insert", method = RequestMethod.POST)
     public String insertReview(@RequestParam("bookId") int bookId,
                                @RequestParam("rating") int rating,
                                @RequestParam("content") String content) {
-        
         String mid = getSecurityLoginId();
-        if (mid == null) {
-            return "login_required";
-        }
+        if (mid == null) return "login_required";
         
         boolean isDuplicate = bookService.hasAlreadyReviewed(bookId, mid);
-        if (isDuplicate) {
-            return "already_exists";
-        }
+        if (isDuplicate) return "already_exists";
         
         boolean success = reviewService.addReview(bookId, mid, rating, content);
         return success ? "success" : "fail";
+    }
+    
+    // 실시간 배송 상태 변경 모니터링용 비동기 API
+    @RequestMapping(value = "/status", produces = "text/plain; charset=UTF-8")
+    @ResponseBody
+    public String getOrderStatus(@RequestParam int orderId) {
+        return orderService.getOrderStatus(orderId);
+    }
+
+    // 배송 정보 상세 페이지 포워딩 처리
+    @RequestMapping("/detail")
+    public String orderDetail(@RequestParam int orderId, Model model) {
+        OrderVO order = orderService.getOrderById(orderId);
+        model.addAttribute("order", order); 
+        model.addAttribute("contentPage", "/WEB-INF/views/order/order_detail.jsp");
+        return "layout/layout";
     }
 }

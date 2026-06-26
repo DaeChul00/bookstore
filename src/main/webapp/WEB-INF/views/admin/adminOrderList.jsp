@@ -46,8 +46,9 @@
                         <form action="${pageContext.request.contextPath}/admin/order/updateStatus" method="post" style="display: flex; gap: 5px; justify-content: center;">
                             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
                             <input type="hidden" name="orderId" value="${item.orderId}">
-                            <select name="deliveryStatus" class="form-select form-select-sm" style="width: 110px; font-size: 13px;">
-                                <option value="주문완료" <c:if test="${empty item.deliveryStatus || item.deliveryStatus eq '주문완료'}">selected</c:if>>주문완료</option>
+                            <select name="deliveryStatus" class="form-select form-select-sm" style="width: 120px; font-size: 13px;">
+                                <option value="주문완료" <c:if test="${empty item.deliveryStatus || item.deliveryStatus eq '주문완료' || item.deliveryStatus eq '결제완료'}">selected</c:if>>주문완료</option>
+                                <option value="배송준비" <c:if test="${item.deliveryStatus eq '배송준비'}">selected</c:if>>배송준비</option>
                                 <option value="배송중" <c:if test="${item.deliveryStatus eq '배송중'}">selected</c:if>>배송중</option>
                                 <option value="배송완료" <c:if test="${item.deliveryStatus eq '배송완료'}">selected</c:if>>배송완료</option>
                             </select>

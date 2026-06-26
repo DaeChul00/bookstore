@@ -32,7 +32,7 @@
                     <td><fmt:formatNumber value="${book.price}" pattern="#,###원"/></td>
                     <td>⭐ ${book.rating}</td>
                     <td>
-                        <a href="${pageContext.request.contextPath}/book/updateform?id=${book.id}" class="btn btn-sm btn-outline-success">수정</a>
+                        <a href="${pageContext.request.contextPath}/book/update?id=${book.id}" class="btn btn-sm btn-outline-success">수정</a>
                         <button class="btn btn-sm btn-outline-danger" 
                                 onclick="if(confirm('정말 삭제하시겠습니까?')) location.href='${pageContext.request.contextPath}/book/delete?id=${book.id}'">삭제</button>
                     </td>
