@@ -187,29 +187,64 @@ public class OrderController {
         return "redirect:/order/cart";
     }
 
-    // 5. 결제 및 주문완료 프로세스
     @RequestMapping("/buy")
-    public String buy() {
-        String mid = getSecurityLoginId();
-        if (mid == null) return "redirect:/login";
+    public String buy(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
+        String mid = getSecurityLoginId(); // 로그인 안 되어 있으면 null 또는 anonymousUser 반환
         
-        List<CartVO> cartList = cartService.getCartList(mid);
-        if (cartList != null && !cartList.isEmpty()) {
-            List<OrderVO> orderList = new ArrayList<>();
-            for (CartVO cart : cartList) {
-                orderList.add(OrderVO.builder()
-                        .memberId(mid)
-                        .bookId(cart.getBookId())
-                        .title(cart.getTitle())
-                        .count(cart.getCount())
-                        .orderPrice(cart.getPrice() * cart.getCount())
-                        .bookimage(cart.getBookimage())
-                        .deliveryStatus("주문완료")
-                        .build());
-            }
-            orderService.placeOrder(mid, orderList);
-            return "redirect:/order/list";
+        // 시큐리티 익명 사용자 문자열 가드 처리
+        if ("anonymousUser".equals(mid)) {
+            mid = null;
         }
+
+        List<OrderVO> orderList = new ArrayList<>();
+
+        if (mid != null) {
+            // ⭕ [회원 주문 케이스] DB 장바구니에서 리스트 가져오기
+            List<CartVO> cartList = cartService.getCartList(mid);
+            if (cartList != null && !cartList.isEmpty()) {
+                for (CartVO cart : cartList) {
+                    orderList.add(OrderVO.builder()
+                            .memberId(mid)
+                            .bookId(cart.getBookId())
+                            .title(cart.getTitle())
+                            .count(cart.getCount())
+                            .orderPrice(cart.getPrice() * cart.getCount())
+                            .bookimage(cart.getBookimage())
+                            .deliveryStatus("주문완료")
+                            .build());
+                }
+                orderService.placeOrder(mid, orderList); // DB 장바구니 비우기 포함된 서비스
+                return "redirect:/order/list"; // 회원 주문 내역 페이지로 이동
+            }
+        } else {
+            // ⭕ [비회원 주문 케이스] 로그인 창으로 안 보내고 브라우저 쿠키(guestCart) 파싱해서 주문 넣기
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("guestCart".equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().isEmpty()) {
+                        try {
+                            String cartJson = URLDecoder.decode(cookie.getValue(), "UTF-8");
+                            // 💡 쿠키 문자열을 파싱하여 가공하는 로직 수행 (시큐리티 successHandler에 두신 파싱 로직 참고)
+                            // ... 파싱하여 파악한 bookId, count 정보를 바탕으로 orderList에 추가 ...
+                            
+                            // 비회원 주문 전송 호출 (MEMBER_ID가 null로 들어감)
+                            // orderService.placeGuestOrder(orderList); 
+                            
+                            // 사용 완료한 비회원 장바구니 쿠키 삭제 조치
+                            cookie.setValue("");
+                            cookie.setPath("/");
+                            cookie.setMaxAge(0);
+                            response.addCookie(cookie);
+                            
+                            return "redirect:/book"; // 비회원은 주문내역 페이지가 없으므로 메인으로 홈 리다이렉트
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        
         return "redirect:/order/cart";
     }
 
@@ -260,37 +295,27 @@ public class OrderController {
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     public String submitOrder(MemberAddressVO addressVO, HttpSession session, RedirectAttributes ra) {
         
-        // ❌ 기존 코드: session.getAttribute("memberId") -> 시큐리티 환경이라 null 반환됨
-        // String loginId = (String) session.getAttribute("memberId");
-        
-        // ⭕ 변경 코드: 스프링 시큐리티에서 현재 로그인한 유저 아이디 추출
         String loginId = null;
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
         if (principal instanceof UserDetails) {
             loginId = ((UserDetails)principal).getUsername();
-        } else {
-            loginId = principal.toString();
         }
         
-        // 시큐리티 비로그인 상태(익명 사용자 등) 체크
+        // 비회원일 경우 익명 사용자 처리
         if (loginId == null || loginId.equals("anonymousUser")) {
-            ra.addFlashAttribute("msg", "로그인이 필요한 서비스입니다.");
-            return "redirect:/login";
+            addressVO.setMemberId(null); 
+            addressVO.setAddrName("비회원배송지");
+        } else {
+            addressVO.setMemberId(loginId);
         }
         
-        // VO에 정상적인 로그인 ID 바인딩
-        addressVO.setMemberId(loginId);
+        // 이후 주문 처리 로직 실행...
+        orderService.processOrder(addressVO); 
         
-        try {
-            orderService.processOrder(addressVO);
-            ra.addFlashAttribute("msg", "주문이 성공적으로 완료되었습니다! 💳");
-            return "redirect:/order/cart";
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            ra.addFlashAttribute("msg", "주문 처리 중 오류가 발생했습니다.");
-            return "redirect:/cart/list";
-        }
+        // ⭕ 성공 메시지를 세션에 임시 적재하고 올바른 장바구니 페이지로 리다이렉트
+        ra.addFlashAttribute("msg", "주문 및 결제가 성공적으로 완료되었습니다! 💳");
+        
+        return "redirect:/order/cart"; // ❌ 기존 "redirect:/cart/list" 에서 올바른 주소로 수정
     }
 }

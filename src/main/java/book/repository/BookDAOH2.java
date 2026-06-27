@@ -184,7 +184,28 @@ public class BookDAOH2 implements BookDAO {
 
     @Override
     public List<BookVO> searchBooks(String category, String keyword) {
-        return findAll(category, keyword);
+    	String validCategory = validateCategory(category);
+
+        String sql =
+            "SELECT * " +
+            "FROM BOOK " +
+            "WHERE " + validCategory + " LIKE ? " +
+            "ORDER BY " +
+            "CASE " +
+            "   WHEN " + validCategory + " LIKE ? THEN 0 " +
+            "   WHEN " + validCategory + " LIKE ? THEN 1 " +
+            "   ELSE 2 " +
+            "END, " +
+            validCategory + " ASC " +
+            "LIMIT 6";
+
+        return jdbcTemplate.query(
+                sql,
+                new BookMapper(),
+                "%" + keyword + "%",  // 검색
+                keyword + "%",        // 시작 일치
+                "%" + keyword + "%"   // 포함 일치
+        );
     }
     
     

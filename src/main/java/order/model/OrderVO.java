@@ -19,4 +19,7 @@ public class OrderVO {
     private String orderDate;     // 주문 날짜
     private String bookimage;     // 책 이미지
     private String deliveryStatus; // 배송 상태 필드
+    private String orderCode;
+    private String zipcode;
+    private String roadAddress;
 }

@@ -12,7 +12,6 @@
 .total-area { text-align: right; margin-top: 30px; font-size: 20px; font-weight: bold; }
 .btn-order { background: #e67e22; color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
 
-/* ➕ 배송지 섹션 스타일 추가 */
 .delivery-section { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 30px; margin-top: 40px; display: none; }
 .delivery-section h3 { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #2c3e50; }
 .form-group { margin-bottom: 15px; display: flex; align-items: center; }
@@ -47,7 +46,7 @@
                 </thead>
                 <tbody>
                     <c:forEach var="item" items="${cartList}">
-                        <tr>
+                        <tr class="cart-item-row" data-bookid="${item.bookId}" data-title="${item.title}" data-price="${item.price}" data-count="${item.count}" data-image="${item.bookimage}">
                             <td><img src="${item.bookimage}" class="book-thumb"></td>
                             <td style="text-align: left; font-weight: bold;">${item.title}</td>
                             <td><fmt:formatNumber value="${item.price}" type="number"/>원</td>
@@ -68,6 +67,12 @@
                 <h3>📦 배송지 정보 입력</h3>
                 <form id="orderForm" action="${pageContext.request.contextPath}/order/submit" method="post">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                    
+                    <input type="hidden" name="bookId" id="orderBookId">
+                    <input type="hidden" name="title" id="orderTitle">
+                    <input type="hidden" name="count" id="orderCount">
+                    <input type="hidden" name="orderPrice" id="orderPrice">
+                    <input type="hidden" name="bookimage" id="orderBookImage">
                     
                     <div class="form-group">
                         <label>배송지 별칭</label>
@@ -109,12 +114,12 @@
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <script>
+// ⭕ 로그인 여부를 시큐리티 태그 라이브러리를 통해 안전하게 문자열 치환 방식으로 확인
 var isLogin = false;
 <sec:authorize access="isAuthenticated()">
     isLogin = true;
 </sec:authorize>
 
-// ➕ 카카오 우편번호 검색 함수
 function execDaumPostcode() {
     new daum.Postcode({
         oncomplete: function(data) {
@@ -186,31 +191,35 @@ function handleDelete(bookId) {
     }
 }
 
-// 🛠️ 주문하기 로직 변경
 function handleOrder() {
-    if (!isLogin) {
-        alert("로그인 후 주문이 가능합니다. 로그인 페이지로 이동합니다.");
-        location.href = "${pageContext.request.contextPath}/login";
-        return;
-    }
-
     var deliverySec = $("#deliverySection");
 
-    // 배송지 창이 열려있지 않다면 먼저 열어준다
     if (deliverySec.is(":hidden")) {
         deliverySec.slideDown();
         $("#mainOrderBtn").text("최종 결제 및 주문완료 💳");
-        
-        // 💡 팁: 만약 기존 회원 기본배송지가 DB에 있다면 
-        // 비동기(Ajax)로 데이터를 미리 불러와서 세팅해 주는 로직을 여기에 구현하면 베스트입니다.
     } else {
-        // 배송지 창이 열려있는 상태에서 한 번 더 누르면 유효성 검사 후 최종 submit
         if($("#zipcode").val() === "" || $("#roadAddress").val() === "") {
             alert("배송지 주소를 검색하여 입력해 주세요.");
             return;
         }
 
-        // 주소 데이터 결합 후 hidden에 바인딩
+        // ➕ [핵심 추가] 폼 제출 직전, 테이블 행 데이터에서 상품 정보 자동 수집 및 hidden 주입
+        // 단일 상품 결제 혹은 첫 번째 상품 가공 기준 예시
+        var firstItem = $(".cart-item-row").first();
+        if (firstItem.length > 0) {
+            var bookId = firstItem.data("bookid");
+            var title = firstItem.data("title");
+            var price = parseInt(firstItem.data("price"));
+            var count = parseInt(firstItem.data("count"));
+            var image = firstItem.data("image");
+            
+            $("#orderBookId").val(bookId);
+            $("#orderTitle").val(title);
+            $("#orderCount").val(count);
+            $("#orderPrice").val(price * count); // 총 금액 = 단가 * 수량
+            $("#orderBookImage").val(image);
+        }
+
         var finalAddr = $("#roadAddress").val().trim() + " " + $("#detailAddress").val().trim();
         $("#finalRoadAddress").val(finalAddr);
 
@@ -259,7 +268,10 @@ function removeGuestCartCookie(bookId) {
         location.reload();
     }
 }
-<c:if test="${not empty msg}">
-alert("${msg}");
-</c:if>
 </script>
+
+<c:if test="${not empty msg}">
+<script>
+    alert("${msg}");
+</script>
+</c:if>
