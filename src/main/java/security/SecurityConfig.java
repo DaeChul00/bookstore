@@ -48,10 +48,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
             .csrf().disable()
             .authorizeHttpRequests(auth -> auth
+            		.dispatcherTypeMatchers(javax.servlet.DispatcherType.FORWARD, javax.servlet.DispatcherType.ERROR).permitAll()
                     .requestMatchers(
                             AntPathRequestMatcher.antMatcher("/"),
                             AntPathRequestMatcher.antMatcher("/book/**"),
                             AntPathRequestMatcher.antMatcher("/order/cart"),
+                            AntPathRequestMatcher.antMatcher("/order/nmorderlist"),
                             AntPathRequestMatcher.antMatcher("/order/addCart"),
                             AntPathRequestMatcher.antMatcher("/order/updateCartAsync"),
                             AntPathRequestMatcher.antMatcher("/order/deleteCart"),

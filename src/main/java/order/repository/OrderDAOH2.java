@@ -1,12 +1,16 @@
 package order.repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import member.model.MemberAddressVO;
 import order.model.OrderVO;
 
 @Repository
@@ -40,6 +44,55 @@ public class OrderDAOH2 {
 			return new ArrayList<>();
 		}
 	}
+	
+	// 1. 비회원 전용 주문 내역 리스트 조회
+		public List<OrderVO> findNonMemberOrders(int orderId) {
+			String sql = "SELECT ORDER_ID, BOOK_ID, TITLE, BOOKIMAGE, COUNT, ORDER_PRICE, ORDER_DATE, DELIVERY_STATUS, ZIPCODE, ROAD_ADDRESS "
+					   + "FROM ORDERS WHERE ORDER_ID = ? ORDER BY ORDER_ID DESC";
+			try {
+				return jdbcTemplate.query(sql, (rs, rowNum) -> OrderVO.builder()
+						.orderId(rs.getInt("ORDER_ID"))
+						.bookId(rs.getInt("BOOK_ID"))
+						.title(rs.getString("TITLE"))
+						.bookimage(rs.getString("BOOKIMAGE"))
+						.count(rs.getInt("COUNT"))
+						.orderPrice(rs.getInt("ORDER_PRICE"))
+						.orderDate(rs.getTimestamp("ORDER_DATE") != null ? rs.getTimestamp("ORDER_DATE").toString() : null)
+						.deliveryStatus(rs.getString("DELIVERY_STATUS"))
+						.zipcode(rs.getString("ZIPCODE"))
+						.roadAddress(rs.getString("ROAD_ADDRESS"))
+						.build(), orderId);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return new ArrayList<>(); 
+			}
+		}
+
+		// 2. 비회원 최종 주문 제출 시 데이터 저장
+		public int nonlogInsert(OrderVO orderVO) {
+		    String sql = "INSERT INTO ORDERS (BOOK_ID, TITLE, COUNT, ORDER_PRICE, BOOKIMAGE, ZIPCODE, ROAD_ADDRESS, DELIVERY_STATUS) "
+		               + "VALUES (?, ?, ?, ?, ?, ?, ?, '결제완료')";
+
+		    KeyHolder keyHolder = new GeneratedKeyHolder();
+
+		    jdbcTemplate.update(connection -> {
+		        PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		        ps.setInt(1, orderVO.getBookId());
+		        ps.setString(2, orderVO.getTitle());
+		        ps.setInt(3, orderVO.getCount());
+		        ps.setInt(4, orderVO.getOrderPrice());
+		        ps.setString(5, orderVO.getBookimage());
+		        ps.setString(6, orderVO.getZipcode());
+		        ps.setString(7, orderVO.getRoadAddress());
+		        return ps;
+		    }, keyHolder);
+
+		    if (keyHolder.getKeys() != null && keyHolder.getKeys().containsKey("ORDER_ID")) {
+		        return ((Number) keyHolder.getKeys().get("ORDER_ID")).intValue();
+		    }
+
+		    return 0;
+		}
 
 	// 3. 관리자 대시보드용 전체 내역 조회 API
 	public List<OrderVO> findAllOrdersForAdmin() {
@@ -92,12 +145,21 @@ public class OrderDAOH2 {
 
 	}
 
-	public void insertAddress(MemberAddressVO addressVO) {
-		String sql = "INSERT INTO ORDERS (MEMBER_ID, ZIPCODE, ROAD_ADDRESS, DELIVERY_STATUS) "
-				+ "VALUES (?, ?, ?, '결제완료')";
+	public void insertAddress(OrderVO orderVO) {
+	    // 1. ⭕ 책 관련 컬럼(BOOK_ID, TITLE, COUNT, ORDER_PRICE, BOOKIMAGE)과 물음표(?)를 추가합니다.
+	    String sql = "INSERT INTO ORDERS (MEMBER_ID, BOOK_ID, TITLE, COUNT, ORDER_PRICE, BOOKIMAGE, ZIPCODE, ROAD_ADDRESS, DELIVERY_STATUS) "
+	               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, '결제완료')";
 
-		jdbcTemplate.update(sql, addressVO.getMemberId(), // 로그인 안 했으면 null 전달됨
-				addressVO.getZipcode(), addressVO.getRoadAddress() // JSP에서 기본주소+상세주소가 합쳐진 문자열
-		);
+	    // 2. ⭕ 상단 쿼리의 ? 순서와 1:1로 정확하게 매칭되도록 orderVO의 Getter들을 순서대로 배치합니다.
+	    jdbcTemplate.update(sql, 
+	        orderVO.getMemberId(),     // 1번째 ? (로그인 안 했으면 null 전달됨)
+	        orderVO.getBookId(),       // 2번째 ?
+	        orderVO.getTitle(),        // 3번째 ?
+	        orderVO.getCount(),        // 4번째 ?
+	        orderVO.getOrderPrice(),   // 5번째 ? (단가 * 수량이 계산된 최종 금액)
+	        orderVO.getBookimage(),    // 6번째 ?
+	        orderVO.getZipcode(),      // 7번째 ?
+	        orderVO.getRoadAddress()   // 8번째 ? (JSP에서 기본주소+상세주소가 합쳐진 문자열)
+	    );
 	}
 }

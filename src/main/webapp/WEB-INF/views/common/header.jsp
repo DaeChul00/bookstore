@@ -55,6 +55,7 @@
 		<nav style="font-size: 13px; display: flex; align-items: center; gap: 10px; white-space: nowrap;">
 			<a href="${pageContext.request.contextPath}/cs/csList" style="text-decoration: none; color: #333;">고객센터</a> 
 			<a href="${pageContext.request.contextPath}/order/cart" style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">🛒 장바구니</a>
+			<a href="${pageContext.request.contextPath}/order/nmorderlist" style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">📦 주문내역</a>
 
 			<sec:authorize access="isAnonymous()">
 				<a href="${pageContext.request.contextPath}/login" style="text-decoration: none; color: #333;">로그인</a>
