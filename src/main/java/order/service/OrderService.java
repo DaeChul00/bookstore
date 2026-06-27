@@ -1,9 +1,12 @@
 package order.service;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import member.model.MemberAddressVO;
 import order.model.OrderVO;
 import order.repository.CartDAOH2;
 import order.repository.OrderDAOH2;
@@ -46,5 +49,27 @@ public class OrderService {
     // 배송 정보 상세 페이지 단건 조회용 서비스 엔진
     public OrderVO getOrderById(int orderId) {
         return orderDao.getOrderById(orderId);
+    }
+    
+    @Transactional // ❗ 여러 DB 작업이 한 번에 성공하거나 실패하도록 트랜잭션 보장
+    public void processOrder(OrderVO orderVO) {
+        
+        // 1. 기존에 등록된 기본 배송지가 있다면 'N'으로 해제
+    	orderDao.disableDefaultAddress(orderVO.getMemberId());
+        
+        // 2. 새 주소 정보(JSP에서 입력받은 폼 데이터)를 주소 테이블에 저장
+    	orderDao.insertAddress(orderVO);
+        
+        // 3. (필요 시 추가) 주문 이력 인서트 및 장바구니 비우기 로직 위치
+        // orderDAO.insertOrder(...);
+        // orderDAO.clearCart(addressVO.getMemberId());
+    }
+
+    public List<OrderVO> findNonMemberOrders(Integer guestOrderId) {
+        return orderDao.findNonMemberOrders(guestOrderId); 
+    }
+
+    public int nonlogInsert(OrderVO orderVO) {
+        return orderDao.nonlogInsert(orderVO); 
     }
 }

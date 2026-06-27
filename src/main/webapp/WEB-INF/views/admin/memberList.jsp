@@ -35,35 +35,36 @@
             </tr>
         </thead>
         <tbody>
-            <c:forEach var="user" items="${userList}">
-                <tr>
-                    <td>${user.memberId}</td> 
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td>
-                        <form action="${pageContext.request.contextPath}/admin/changeRole" method="post" style="display: flex; justify-content: center; gap: 5px;">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
-                            <input type="hidden" name="memberId" value="${user.memberId}">
-                            
-                            <select name="role" style="padding: 5px; border-radius: 4px;">
-                                <option value="USER" ${user.role == 'ROLE_USER' ? 'selected' : ''}>USER</option>
-                                <option value="ADMIN" ${user.role == 'ROLE_ADMIN' ? 'selected' : ''}>ADMIN</option>
-                                <option value="USER_ADMIN" ${user.role == 'ROLE_USER_ADMIN' ? 'selected' : ''}>USER_ADMIN</option>
-                                <option value="BOOK_ADMIN" ${user.role == 'ROLE_BOOK_ADMIN' ? 'selected' : ''}>BOOK_ADMIN</option>
-                            </select>
-                            <button type="submit" class="btn-submit">변경</button>
-                        </form>
-                    </td>
-                    <td>${user.regdate}</td>
-                    <td>
-                        <button type="button" class="btn-delete" 
-                                onclick="if(confirm('${user.memberId} 회원을 강제 탈퇴시키겠습니까?')) 
-                                location.href='${pageContext.request.contextPath}/admin/deleteMember?memberId=${user.memberId}'">
-                            삭제
-                        </button>
-                    </td>
-                </tr>
-            </c:forEach>
-        </tbody>
+		    <c:forEach var="user" items="${userList}">
+		        <c:if test="${user.role != 'ROLE_ADMIN' && user.role != 'ADMIN'}">
+		            <tr>
+		                <td>${user.memberId}</td> 
+		                <td>${user.name}</td>
+		                <td>${user.email}</td>
+		                <td>
+		                    <form action="${pageContext.request.contextPath}/admin/changeRole" method="post" style="display: flex; justify-content: center; gap: 5px; margin: 0;">
+		                        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+		                        <input type="hidden" name="memberId" value="${user.memberId}">
+		                        
+		                        <select name="role" style="padding: 5px; border-radius: 4px;">
+		                            <option value="USER" ${user.role.contains('USER') && !user.role.contains('ADMIN') ? 'selected' : ''}>USER</option>
+		                            <option value="USER_ADMIN" ${user.role.contains('USER_ADMIN') ? 'selected' : ''}>USER_ADMIN</option>
+		                            <option value="BOOK_ADMIN" ${user.role.contains('BOOK_ADMIN') ? 'selected' : ''}>BOOK_ADMIN</option>
+		                        </select>
+		                        <button type="submit" class="btn-submit">변경</button>
+		                    </form>
+		                </td>
+		                <td>${user.regdate}</td>
+		                <td>
+		                    <button type="button" class="btn-delete" 
+		                            onclick="if(confirm('${user.memberId} 회원을 강제 탈퇴시키겠습니까?')) 
+		                            location.href='${pageContext.request.contextPath}/admin/deleteMember?memberId=${user.memberId}'">
+		                        삭제
+		                    </button>
+		                </td>
+		            </tr>
+		        </c:if>
+		    </c:forEach>
+		</tbody>
     </table>
 </div>

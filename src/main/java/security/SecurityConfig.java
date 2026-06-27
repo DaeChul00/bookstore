@@ -54,13 +54,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
             .csrf().disable()
             .authorizeHttpRequests(auth -> auth
+            		.dispatcherTypeMatchers(javax.servlet.DispatcherType.FORWARD, javax.servlet.DispatcherType.ERROR).permitAll()
                     .requestMatchers(
                             AntPathRequestMatcher.antMatcher("/"),
                             AntPathRequestMatcher.antMatcher("/book/**"),
                             AntPathRequestMatcher.antMatcher("/order/cart"),
+                            AntPathRequestMatcher.antMatcher("/order/nmorderlist"),
                             AntPathRequestMatcher.antMatcher("/order/addCart"),
                             AntPathRequestMatcher.antMatcher("/order/updateCartAsync"),
                             AntPathRequestMatcher.antMatcher("/order/deleteCart"),
+                            AntPathRequestMatcher.antMatcher("/order/buy"),
+                            AntPathRequestMatcher.antMatcher("/order/submit"),
                             AntPathRequestMatcher.antMatcher("/order/review-insert"),
                             AntPathRequestMatcher.antMatcher("/order/status"),
                             AntPathRequestMatcher.antMatcher("/order/detail"),
@@ -73,7 +77,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                             AntPathRequestMatcher.antMatcher("/js/**"),
                             AntPathRequestMatcher.antMatcher("/images/**")
                     ).permitAll()
-                    .requestMatchers(AntPathRequestMatcher.antMatcher("/admin/**")).hasRole("ADMIN")
+                    .requestMatchers(AntPathRequestMatcher.antMatcher("/admin/**"))
+                    .hasAnyRole("ADMIN", "USER_ADMIN", "BOOK_ADMIN")
                     .anyRequest().authenticated()
                 )
             .formLogin()

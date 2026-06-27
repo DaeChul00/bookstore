@@ -146,22 +146,28 @@
 			</div>
 		</div>
 
-		<nav
-			style="font-size: 13px; display: flex; align-items: center; gap: 10px; white-space: nowrap;">
+<nav style="font-size: 13px; display: flex; align-items: center; gap: 10px; white-space: nowrap;">
 			<a href="${pageContext.request.contextPath}/cs/csList"
-				style="text-decoration: none; color: #333;">고객센터</a> <a
-				href="${pageContext.request.contextPath}/order/cart"
+				style="text-decoration: none; color: #333;">고객센터</a> 
+			<a href="${pageContext.request.contextPath}/order/cart"
 				style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">🛒
 				장바구니</a>
 
+			<%-- 🔓 로그인하지 않은 비회원(Anonymous) 상태일 때만 노출 --%>
 			<sec:authorize access="isAnonymous()">
+				<%-- 비회원전용 주문내역 탭 --%>
+				<a href="${pageContext.request.contextPath}/order/nmorderlist" 
+					style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">📦 비회원 주문내역</a>
+				
 				<a href="${pageContext.request.contextPath}/login"
 					style="text-decoration: none; color: #333;">로그인</a>
 				<a href="${pageContext.request.contextPath}/signup"
 					style="text-decoration: none; color: #333;">회원가입</a>
 			</sec:authorize>
 
+			<%-- 🔒 로그인 완료된 회원(Authenticated) 상태일 때 노출 --%>
 			<sec:authorize access="isAuthenticated()">
+				<%-- 일반 유저 등급일 때만 유저용 마이페이지 주문내역 노출 --%>
 				<sec:authorize access="not hasRole('ADMIN')">
 					<a href="${pageContext.request.contextPath}/order/list"
 						style="text-decoration: none; color: #d9534f; font-weight: bold; margin-right: 5px;">📦
@@ -181,6 +187,7 @@
 				<a href="${pageContext.request.contextPath}/member/update"
 					style="color: #666; font-size: 12px; margin-right: 5px;">[정보수정]</a>
 
+				<%-- 세분화된 관리자 권한 분기 메뉴 트리 --%>
 				<sec:authorize
 					access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BOOK_ADMIN')">
 					<div style="position: relative; display: inline-block;">
@@ -208,7 +215,7 @@
 									회원관리</a>
 							</sec:authorize>
 
-							
+							<%-- 통계 관제 권한 --%>
 							<sec:authorize access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BOOK_ADMIN')">
 								<a href="${pageContext.request.contextPath}/admin/stat/sales"
 									style="display: block; padding: 5px 0; text-decoration: none; color: #8e44ad;">📊
