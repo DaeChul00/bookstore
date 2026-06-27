@@ -57,10 +57,16 @@ public class SecurityConfig {
                         "/js/**",
                         "/images/**")
                 .permitAll()
-
+                //1. 회원 관리 권한 (USER_ADMIN 또는 총관리자)
+                .requestMatchers("/admin/memberList", "/admin/changeRole", "/admin/deleteMember")
+                .hasAnyAuthority("ROLE_ADMIN", "ROLE_USER_ADMIN")
+                // 2. 도서 및 주문 관리 권한 (BOOK_ADMIN 또는 총관리자)
+                .requestMatchers("/admin/book/**", "/admin/order/**")
+                .hasAnyAuthority("ROLE_ADMIN", "ROLE_BOOK_ADMIN")
+                // 3. 그 외 관리자 페이지가 있다면 총관리자만 접근 가능
                 .requestMatchers("/admin/**")
-                .hasRole("ADMIN")
-
+                .hasAnyAuthority("ROLE_ADMIN")
+                
                 .anyRequest()
                 .authenticated()
             )
@@ -92,6 +98,7 @@ public class SecurityConfig {
 
                 .permitAll()
             );
+        
 
         return http.build();
     }

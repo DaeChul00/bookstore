@@ -35,10 +35,11 @@ public class AdminController {
     }
 
     // 회원 권한 변경
-    @RequestMapping("/changeRole")
-    public String changeRole(@RequestParam("memberId") String memberId, @RequestParam("role") String role) {
-        String newRole = "ADMIN".equals(role) ? "USER" : "ADMIN";
-        memberService.changeRole(memberId, newRole);
+    @RequestMapping(value = "/changeRole", method = RequestMethod.POST)
+    public String changeRole(@RequestParam("memberId") String memberId, 
+                             @RequestParam("role") String role) {
+        // 이제 드롭다운에서 선택된 ROLE_... 값이 그대로 들어옵니다.
+        memberService.changeRole(memberId, role);
         return "redirect:/admin/memberList";
     }
 

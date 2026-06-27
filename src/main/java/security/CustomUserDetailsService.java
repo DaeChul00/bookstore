@@ -33,7 +33,8 @@ public class CustomUserDetailsService
         return User.builder()
                 .username(member.getMemberId())
                 .password(member.getPassword())
-                .roles(member.getRole())
+                // .roles(member.getRole()) // 이 줄을 지우고 아래 줄로 교체
+                .authorities("ROLE_" + member.getRole()) // 명시적으로 접두사를 1번만 붙임
                 .build();
     }
 }
