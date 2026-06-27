@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="chat.repository.ChatRoomDAO">
+
+	<select id="selectAllRooms" resultType="chat.model.ChatRoomVO">
+		SELECT
+		r.room_id AS roomId,
+		r.username1 AS username1,
+		r.username2 AS username2,
+		r.created_at AS createdAt,
+
+		m.message AS lastMessage,
+		m.send_time AS lastTime
+
+		FROM chat_room r
+
+		LEFT JOIN chat_message m
+		ON m.room_id = r.room_id
+		AND m.send_time = (
+		SELECT MAX(send_time)
+		FROM chat_message
+		WHERE room_id = r.room_id
+		)
+
+		ORDER BY r.created_at DESC
+	</select>
+
+</mapper>

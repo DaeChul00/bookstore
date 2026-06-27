@@ -1,41 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.3.xsd">
 
-	<context:component-scan base-package="book, member, order, cs, admin, security, email, kakaoLogin" />
+    <!-- Component Scan -->
+    <context:component-scan
+        base-package="book, member, order, cs, admin, security, email, kakaoLogin, chat" />
 
-	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-		<property name="driverClassName" value="org.h2.Driver" />
-		<property name="url" value="jdbc:h2:tcp://localhost/~/test" />
-		<property name="username" value="sa" />
-		<property name="password" value="" />
-	</bean>
+    <!-- DataSource -->
+    <bean id="dataSource"
+        class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 
-	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
-		<property name="dataSource" ref="dataSource" />
-	</bean>
+        <property name="driverClassName"
+            value="org.h2.Driver" />
 
-	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-		<property name="dataSource" ref="dataSource" />
-	</bean>
-	
-	<bean id="mailSender"
-      class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="url"
+            value="jdbc:h2:tcp://localhost/~/test" />
 
-    <property name="host" value="smtp.gmail.com"/>
-    <property name="port" value="587"/>
-    <property name="username" value="kalec267@gmail.com"/>
-    <property name="password" value="hfzwprbyiexuwnlm"/>
+        <property name="username"
+            value="sa" />
 
-    <property name="javaMailProperties">
-        <props>
-            <prop key="mail.smtp.auth">true</prop>
-            <prop key="mail.smtp.starttls.enable">true</prop>
-        </props>
-    </property>
-</bean>
+        <property name="password"
+            value="" />
+
+    </bean>
+
+    <!-- JdbcTemplate -->
+    <bean id="jdbcTemplate"
+        class="org.springframework.jdbc.core.JdbcTemplate">
+
+        <property name="dataSource"
+            ref="dataSource" />
+
+    </bean>
+
+    <!-- MyBatis -->
+    <bean id="sqlSessionFactory"
+        class="org.mybatis.spring.SqlSessionFactoryBean">
+
+        <property name="dataSource"
+            ref="dataSource" />
+
+        <property name="mapperLocations"
+            value="classpath:mapper/*.xml" />
+
+    </bean>
+
+    <!-- Mapper Scan -->
+    <bean
+        class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+
+        <property name="basePackage"
+            value="chat.repository" />
+
+    </bean>
+
+    <!-- Gmail -->
+    <bean id="mailSender"
+        class="org.springframework.mail.javamail.JavaMailSenderImpl">
+
+        <property name="host"
+            value="smtp.gmail.com" />
+
+        <property name="port"
+            value="587" />
+
+        <property name="username"
+            value="kalec267@gmail.com" />
+
+        <property name="password"
+            value="hfzwprbyiexuwnlm" />
+
+        <property name="javaMailProperties">
+            <props>
+                <prop key="mail.smtp.auth">true</prop>
+                <prop key="mail.smtp.starttls.enable">true</prop>
+            </props>
+        </property>
+
+    </bean>
 
 </beans>
