@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+<script src="https://js.tosspayments.com/v1/payment"></script>
 
 <style>
 .cart-container { width: 1000px; margin: 50px auto; }
@@ -28,7 +29,7 @@
     <c:choose>
         <c:when test="${empty cartList}">
             <div style="text-align: center; padding: 50px 0; color: #777;">
-                <h3>장바구니가 텅 비어 있습니다. 😊</h3>
+                <h3>장바구니가 텅 비어 있습니다.</h3>
                 <a href="${pageContext.request.contextPath}/book/list" style="color: #2c3e50; font-weight: bold;">책 보러 가기 ➡️</a>
             </div>
         </c:when>
@@ -63,16 +64,11 @@
                 </tbody>
             </table>
             
+            <%-- 📦 배송지 정보 입력 폼 레이아웃 --%>
             <div class="delivery-section" id="deliverySection">
                 <h3>📦 배송지 정보 입력</h3>
-                <form id="orderForm" action="${pageContext.request.contextPath}/order/submit" method="post">
+                <form id="orderForm" method="post">
                     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                    
-                    <input type="hidden" name="bookId" id="orderBookId">
-                    <input type="hidden" name="title" id="orderTitle">
-                    <input type="hidden" name="count" id="orderCount">
-                    <input type="hidden" name="orderPrice" id="orderPrice">
-                    <input type="hidden" name="bookimage" id="orderBookImage">
                     
                     <div class="form-group">
                         <label>배송지 별칭</label>
@@ -92,8 +88,6 @@
                         <input type="text" id="roadAddress" placeholder="기본주소" readonly required style="width: 500px; margin-bottom: 5px;"><br>
                         <input type="text" id="detailAddress" placeholder="상세주소 입력" style="width: 500px; margin-left: 120px;">
                     </div>
-                    
-                    <input type="hidden" name="roadAddress" id="finalRoadAddress">
                 </form>
             </div>
             
@@ -114,7 +108,6 @@
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
 <script>
-// ⭕ 로그인 여부를 시큐리티 태그 라이브러리를 통해 안전하게 문자열 치환 방식으로 확인
 var isLogin = false;
 <sec:authorize access="isAuthenticated()">
     isLogin = true;
@@ -158,7 +151,6 @@ function handleCountChange(bookId, count) {
         formData.append("bookId", bookId);
         formData.append("count", count);    
         formData.append(csrfParameterName, csrfToken);
-
         fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -191,40 +183,60 @@ function handleDelete(bookId) {
     }
 }
 
+// 주소 인프라와 토스결제 모듈 최종 통합 엔진
 function handleOrder() {
-    var deliverySec = $("#deliverySection");
+    if (!isLogin) {
+        alert("로그인 후 주문이 가능합니다.");
+        window.location.href = "${pageContext.request.contextPath}/login";
+        return;
+    }
 
+    var deliverySec = $("#deliverySection");
+    
+    // 1단계: 배송지 주소 창이 닫혀있다면 열어주기
     if (deliverySec.is(":hidden")) {
         deliverySec.slideDown();
-        $("#mainOrderBtn").text("최종 결제 및 주문완료 💳");
+        $("#mainOrderBtn").text("토스페이로 안전 결제하기 💳");
     } else {
+        // 2단계: 주소 유효성 검사
         if($("#zipcode").val() === "" || $("#roadAddress").val() === "") {
             alert("배송지 주소를 검색하여 입력해 주세요.");
             return;
         }
 
-        // ➕ [핵심 추가] 폼 제출 직전, 테이블 행 데이터에서 상품 정보 자동 수집 및 hidden 주입
-        // 단일 상품 결제 혹은 첫 번째 상품 가공 기준 예시
-        var firstItem = $(".cart-item-row").first();
-        if (firstItem.length > 0) {
-            var bookId = firstItem.data("bookid");
-            var title = firstItem.data("title");
-            var price = parseInt(firstItem.data("price"));
-            var count = parseInt(firstItem.data("count"));
-            var image = firstItem.data("image");
+        var paramZipcode = $("#zipcode").val().trim();
+        var paramFinalAddress = $("#roadAddress").val().trim() + " " + $("#detailAddress").val().trim();
+
+        // 3단계: 주문 준비 API 호출
+        fetch("${pageContext.request.contextPath}/order/prepare", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "${_csrf.parameterName}=${_csrf.token}"
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 4단계: 토스 성공 URL 뒤에 주소 데이터를 쿼리스트링으로 바인딩하여 백엔드로 전달
+            var encodedZip = encodeURIComponent(paramZipcode);
+            var encodedAddr = encodeURIComponent(paramFinalAddress);
             
-            $("#orderBookId").val(bookId);
-            $("#orderTitle").val(title);
-            $("#orderCount").val(count);
-            $("#orderPrice").val(price * count); // 총 금액 = 단가 * 수량
-            $("#orderBookImage").val(image);
-        }
-
-        var finalAddr = $("#roadAddress").val().trim() + " " + $("#detailAddress").val().trim();
-        $("#finalRoadAddress").val(finalAddr);
-
-        // 최종 주문 양식 제출
-        $("#orderForm").submit();
+            var dynamicSuccessUrl = window.location.origin + '${pageContext.request.contextPath}/order/success'
+                                    + '?zipcode=' + encodedZip + '&roadAddress=' + encodedAddr;
+            
+            const tossPayments = TossPayments("test_ck_GjLJoQ1aVZp0Bbwb0yl58w6KYe2R");
+            tossPayments.requestPayment('카드', {
+                amount: data.totalPrice,
+                orderId: data.orderId,
+                orderName: data.orderName,
+                successUrl: dynamicSuccessUrl, // 주소값이 합쳐진 콜백 주소 주입
+                failUrl: window.location.origin + '${pageContext.request.contextPath}/order/fail'
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("주문 준비 중 오류가 발생했습니다.");
+        });
     }
 }
 

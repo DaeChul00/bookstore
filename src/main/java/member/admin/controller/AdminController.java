@@ -69,8 +69,8 @@ public class AdminController {
 
     // 관리자용 배송 상태 변경 처리 (스프링 시큐리티 CSRF 가드 결합 버전 유지)
     @RequestMapping(value = "/order/updateStatus", method = RequestMethod.POST)
-    public String updateDeliveryStatus(@RequestParam int orderId, @RequestParam String deliveryStatus) {
-        orderDAOH2.updateDeliveryStatus(orderId, deliveryStatus);
+    public String updateDeliveryStatusByCode(@RequestParam String orderCode, @RequestParam String deliveryStatus) {
+        orderDAOH2.updateDeliveryStatusByCode(orderCode, deliveryStatus);
         return "redirect:/admin/order/list"; 
     }
 }

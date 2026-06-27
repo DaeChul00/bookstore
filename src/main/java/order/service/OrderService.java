@@ -1,12 +1,10 @@
 package order.service;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import member.model.MemberAddressVO;
+import order.model.CartVO;
 import order.model.OrderVO;
 import order.repository.CartDAOH2;
 import order.repository.OrderDAOH2;
@@ -20,7 +18,6 @@ public class OrderService {
     @Autowired
     private CartDAOH2 cartDao;
 
-    // 주문 완료 후 장바구니 일괄 비우기 트랜잭션 인프라 완벽 보존
     @Transactional
     public boolean placeOrder(String memberId, List<OrderVO> orderList) {
         int resultCount = 0;
@@ -30,39 +27,51 @@ public class OrderService {
         }
         
         if (resultCount == orderList.size()) {
-            cartDao.clearCart(memberId); // 장바구니 일괄 삭제 가동
+            cartDao.clearCart(memberId);
             return true;
         }
         return false;
     }
 
-    // 일반 유저 마이페이지 주문 리스트 조회 메서드 보존
     public List<OrderVO> findOrdersByMemberId(String memberId) {
         return orderDao.findOrdersByMemberId(memberId);
     }
 	
-    // 실시간 배송 상태 비동기 갱신용 서비스 엔진
     public String getOrderStatus(int orderId) {
         return orderDao.getDeliveryStatus(orderId);
     }
 	
-    // 배송 정보 상세 페이지 단건 조회용 서비스 엔진
     public OrderVO getOrderById(int orderId) {
         return orderDao.getOrderById(orderId);
     }
     
-    @Transactional // ❗ 여러 DB 작업이 한 번에 성공하거나 실패하도록 트랜잭션 보장
-    public void processOrder(OrderVO orderVO) {
+    // 토스 결제 승인 후 최종 장바구니 리스트 DB 마이그레이션 적재 아키텍처
+    @Transactional
+    public void confirmPayment(String orderCode, String memberId, String zipcode, String roadAddress) {
+        // 1. 기존에 등록된 기본 배송지가 있다면 'N'으로 사전 해제 (희조 인프라 융합)
+        orderDao.disableDefaultAddress(memberId);
         
-        // 1. 기존에 등록된 기본 배송지가 있다면 'N'으로 해제
-    	orderDao.disableDefaultAddress(orderVO.getMemberId());
+        // 2. 장바구니 리스트를 긁어와서 토스 코드 및 주소록 매핑 바인딩
+        List<CartVO> cartList = cartDao.findCartByMemberId(memberId);
         
-        // 2. 새 주소 정보(JSP에서 입력받은 폼 데이터)를 주소 테이블에 저장
-    	orderDao.insertAddress(orderVO);
+        for (CartVO cart : cartList) {
+            OrderVO order = OrderVO.builder()
+                .memberId(memberId)
+                .bookId(cart.getBookId())
+                .title(cart.getTitle())
+                .count(cart.getCount())
+                .orderPrice(cart.getPrice() * cart.getCount())
+                .bookimage(cart.getBookimage())
+                .deliveryStatus("결제완료")
+                .orderCode(orderCode)
+                .zipcode(zipcode)         // 희조 데이터 퓨전
+                .roadAddress(roadAddress) // 희조 데이터 퓨전
+                .build();
+            orderDao.insertOrder(order);
+        }
         
-        // 3. (필요 시 추가) 주문 이력 인서트 및 장바구니 비우기 로직 위치
-        // orderDAO.insertOrder(...);
-        // orderDAO.clearCart(addressVO.getMemberId());
+        // 3. 주문이 완료되었으므로 회원의 DB 장바구니 일괄 삭제
+        cartDao.clearCart(memberId);
     }
 
     public List<OrderVO> findNonMemberOrders(Integer guestOrderId) {
