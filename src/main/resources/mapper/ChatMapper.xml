@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="chat.repository.ChatDAO">
+
+    <insert id="insertMessage">
+        INSERT INTO chat_message(
+            room_id,
+            sender,
+            message
+        )
+        VALUES(
+            #{roomId},
+            #{sender},
+            #{message}
+        )
+    </insert>
+
+    <select id="getMessages" resultType="chat.model.ChatMessageVO">
+        SELECT *
+        FROM chat_message
+        WHERE room_id = #{roomId}
+        ORDER BY send_time
+    </select>
+
+    <insert id="createRoom" useGeneratedKeys="true" keyProperty="roomId">
+        INSERT INTO chat_room(
+            user1,
+            user2
+        )
+        VALUES(
+            #{username1},
+            #{username2}
+        )
+    </insert>
+
+    <select id="getRoom" resultType="chat.model.ChatRoomVO">
+        SELECT *
+        FROM chat_room
+        WHERE room_id = #{roomId}
+    </select>
+
+    <select id="findRoom" resultType="long">
+        SELECT room_id
+        FROM chat_room
+        WHERE (user1 = #{userName1}
+           AND user2 = #{userName2})
+           OR
+              (user1 = #{userName2}
+           AND user2 = #{userName1})
+    </select>
+
+</mapper>

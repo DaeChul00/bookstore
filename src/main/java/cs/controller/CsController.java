@@ -5,10 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import cs.model.CsVO;
 import cs.service.CsService;
@@ -47,10 +49,11 @@ public class CsController {
         CsVO cv = new CsVO();
         BeanUtils.copyProperties(ics, cv);
 
-        // 🔒 [시큐리티 완벽 연동]: 로그인한 사용자의 진짜 아이디 추출 및 새 변수 매핑
         if (authentication != null) {
             cv.setUserName(authentication.getName());
         }
+        
+        cv.setStatus("답변대기"); 
 
         ra.addFlashAttribute("kind", "insert");
         boolean success = service.insert(cv);
@@ -67,10 +70,40 @@ public class CsController {
     }
 
     @RequestMapping("view")
-    public ModelAndView view(@RequestParam("id") int id) {
+    public ModelAndView view(@RequestParam("id") int id, Authentication authentication) {
         ModelAndView mv = render("view");
-        mv.addObject("cv", service.getCs(id));
+        CsVO vo = service.getCs(id);
+        
+        mv.addObject("cv", vo);
+        
+        boolean isAdmin = false;
+        if (authentication != null) {
+            isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                   || authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_USER_ADMIN"))
+                   || authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_BOOK_ADMIN"));
+        }
+        mv.addObject("isAdmin", isAdmin);
+        
         return mv;
+    }
+
+    @RequestMapping(value = "answer", method = RequestMethod.POST)
+    public String answer(@RequestParam("id") int id, 
+                         @RequestParam("answer") String answer, 
+                         RedirectAttributes ra,
+                         Authentication authentication) {
+        
+        CsVO cv = service.getCs(id);
+        if (cv != null) {
+            cv.setAnswer(answer);
+            cv.setStatus("답변완료"); // 답변이 등록되면 상태를 전환합니다.
+            if (authentication != null) {
+                cv.setAdminId(authentication.getName());
+            }
+            service.update(cv); // 데이터 업데이트 수행
+            ra.addFlashAttribute("message", "success");
+        }
+        return "redirect:/cs/view?id=" + id;
     }
 
     @RequestMapping("updateform")

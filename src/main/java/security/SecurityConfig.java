@@ -69,7 +69,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                             AntPathRequestMatcher.antMatcher("/order/status"),
                             AntPathRequestMatcher.antMatcher("/order/detail"),
                             AntPathRequestMatcher.antMatcher("/cs/**"),
-                            AntPathRequestMatcher.antMatcher("/signup"),
+							AntPathRequestMatcher.antMatcher("/signup"),
                             AntPathRequestMatcher.antMatcher("/login"),
                             AntPathRequestMatcher.antMatcher("/kakao/**"),
                             AntPathRequestMatcher.antMatcher("/email/**"),

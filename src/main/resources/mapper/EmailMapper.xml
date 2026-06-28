@@ -3,7 +3,7 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="member.repository.EmailDAO">
+<mapper namespace="email.repository.EmailDAO">
 
     <insert id="saveAuthCode">
         INSERT INTO email_auth(email, auth_code)
@@ -12,7 +12,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="findByEmail"
             parameterType="String"
-            resultType="member.model.EmailAuthVO">
+            resultType="email.model.EmailAuthVO">
         SELECT *
         FROM email_auth
         WHERE email = #{email}

@@ -156,5 +156,18 @@
 			<version>1.6.2</version>
 		</dependency>
 
+		<!-- 1:1 채팅방 -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
+			<version>5.3.39</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+			<version>5.3.39</version>
+		</dependency>
+
 	</dependencies>
 </project>

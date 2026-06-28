@@ -1,6 +1,14 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+
+<sec:authorize access="isAnonymous()">
+    <script>
+        alert("고객센터는 회원 전용 서비스입니다. 로그인 창으로 이동합니다.");
+        window.location.href = "${pageContext.request.contextPath}/login";
+    </script>
+</sec:authorize>
 
 <div class="container bg-white p-5 rounded shadow-sm">
     <h2 class="text-center mb-4">문의사항 게시판</h2>
@@ -30,15 +38,28 @@
             <c:forEach var="item" items="${csList}">
                 <tr>
                     <td>${item.id}</td>
-                    <td class="text-start ps-4" style="cursor: pointer;" onclick="location.href='view?id=${item.id}'">
+                    
+                    <td class="text-center" style="cursor: pointer;" onclick="location.href='view?id=${item.id}'">
                         <span class="badge bg-info me-2">${item.category}</span> ${item.title}
                     </td>
+                    
                     <td>${item.userName}</td>
+                    
                     <td><fmt:formatDate value="${item.createdAt}" pattern="yyyy-MM-dd" /></td>
+         
                     <td>
-                        <span class="badge ${item.status eq '답변완료' ? 'bg-success' : 'bg-warning'}">
-                            ${item.status}
-                        </span>
+                        <c:choose>
+                            <c:when test="${item.status eq '답변대기' || item.status eq 'WAIT'}">
+                                <span class="badge bg-warning text-dark">
+                                    답변대기
+                                </span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="badge bg-success">
+                                    답변완료
+                                </span>
+                            </c:otherwise>
+                        </c:choose>
                     </td>
                 </tr>
             </c:forEach>

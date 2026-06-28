@@ -108,10 +108,8 @@
 }
 </style>
 
-<header
-	style="border-bottom: 1px solid #eee; background: #fff; width: 100%;">
-	<div class="container"
-		style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
+<header style="border-bottom: 1px solid #eee; background: #fff; width: 100%;">
+	<div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
 
 		<h1 style="margin: 0;">
 			<a href="${pageContext.request.contextPath}/book"
@@ -137,25 +135,21 @@
 				<div id="searchList" class="search-left"></div>
 				<div class="search-preview">
 					<img id="previewImage" src="" style="display: none;">
-					<div class="preview-title"
-						style="font-weight: bold; margin-top: 10px;"></div>
+					<div class="preview-title" style="font-weight: bold; margin-top: 10px;"></div>
 					<div class="preview-author" style="color: #666; font-size: 13px;"></div>
-					<div class="preview-price"
-						style="color: #e67e22; font-weight: bold; margin-top: 5px;"></div>
+					<div class="preview-price" style="color: #e67e22; font-weight: bold; margin-top: 5px;"></div>
 				</div>
 			</div>
 		</div>
 
-<nav style="font-size: 13px; display: flex; align-items: center; gap: 10px; white-space: nowrap;">
+		<nav style="font-size: 13px; display: flex; align-items: center; gap: 10px; white-space: nowrap;">
 			<a href="${pageContext.request.contextPath}/cs/csList"
 				style="text-decoration: none; color: #333;">고객센터</a> 
 			<a href="${pageContext.request.contextPath}/order/cart"
-				style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">🛒
-				장바구니</a>
+				style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">🛒 장바구니</a>
 
 			<%-- 🔓 로그인하지 않은 비회원(Anonymous) 상태일 때만 노출 --%>
 			<sec:authorize access="isAnonymous()">
-				<%-- 비회원전용 주문내역 탭 --%>
 				<a href="${pageContext.request.contextPath}/order/nmorderlist" 
 					style="text-decoration: none; color: #e67e22; font-weight: bold; margin-right: 5px;">📦 비회원 주문내역</a>
 				
@@ -170,8 +164,7 @@
 				<%-- 일반 유저 등급일 때만 유저용 마이페이지 주문내역 노출 --%>
 				<sec:authorize access="not hasRole('ADMIN')">
 					<a href="${pageContext.request.contextPath}/order/list"
-						style="text-decoration: none; color: #d9534f; font-weight: bold; margin-right: 5px;">📦
-						주문내역</a>
+						style="text-decoration: none; color: #d9534f; font-weight: bold; margin-right: 5px;">📦 주문내역</a>
 				</sec:authorize>
 
 				<c:choose>
@@ -179,8 +172,7 @@
 						<span><strong>${loginUser.name}</strong>님</span>
 					</c:when>
 					<c:otherwise>
-						<span><strong><sec:authentication
-									property="principal.username" /></strong>님</span>
+						<span><strong><sec:authentication property="principal.username" /></strong>님</span>
 					</c:otherwise>
 				</c:choose>
 
@@ -188,11 +180,9 @@
 					style="color: #666; font-size: 12px; margin-right: 5px;">[정보수정]</a>
 
 				<%-- 세분화된 관리자 권한 분기 메뉴 트리 --%>
-				<sec:authorize
-					access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BOOK_ADMIN')">
+				<sec:authorize access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BOOK_ADMIN')">
 					<div style="position: relative; display: inline-block;">
-						<a href="#"
-							style="text-decoration: none; color: #2980b9; font-weight: bold; padding: 10px;">
+						<a href="#" style="text-decoration: none; color: #2980b9; font-weight: bold; padding: 10px;">
 							⚙️ 관리자 메뉴 ▼ </a>
 
 						<div class="admin-dropdown"
@@ -201,25 +191,27 @@
 							<%-- 도서 및 주문 관리 권한 --%>
 							<sec:authorize access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_BOOK_ADMIN')">
 								<a href="${pageContext.request.contextPath}/admin/book/list"
-									style="display: block; padding: 5px 0; text-decoration: none; color: #005a32;">📚
-									도서관리</a>
+									style="display: block; padding: 5px 0; text-decoration: none; color: #005a32;">📚 도서관리</a>
 								<a href="${pageContext.request.contextPath}/admin/order/list"
-									style="display: block; padding: 5px 0; text-decoration: none; color: #d35400;">📦
-									주문관리</a>
+									style="display: block; padding: 5px 0; text-decoration: none; color: #d35400;">📦 주문관리</a>
 							</sec:authorize>
 
 							<%-- 회원 관리 권한 --%>
 							<sec:authorize access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN')">
 								<a href="${pageContext.request.contextPath}/admin/memberList"
-									style="display: block; padding: 5px 0; text-decoration: none; color: #2980b9;">👤
-									회원관리</a>
+									style="display: block; padding: 5px 0; text-decoration: none; color: #2980b9;">👤 회원관리</a>
 							</sec:authorize>
 
 							<%-- 통계 관제 권한 --%>
 							<sec:authorize access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BOOK_ADMIN')">
 								<a href="${pageContext.request.contextPath}/admin/stat/sales"
-									style="display: block; padding: 5px 0; text-decoration: none; color: #8e44ad;">📊
-									통계보기</a>
+									style="display: block; padding: 5px 0; text-decoration: none; color: #8e44ad;">📊 통계보기</a>
+							</sec:authorize>
+
+							<%-- 실시간 1:1 상담 메뉴 통합 --%>
+							<sec:authorize access="hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER_ADMIN', 'ROLE_BOOK_ADMIN')">
+								<a href="${pageContext.request.contextPath}/admin/roomList"
+									style="display: block; padding: 5px 0; text-decoration: none; color: #e67e22; font-weight: bold;">💬 1:1문의</a>
 							</sec:authorize>
 
 						</div>
@@ -230,6 +222,7 @@
 					style="text-decoration: none; color: #333; margin-left: 10px;">로그아웃</a>
 			</sec:authorize>
 		</nav>
+
 	</div>
 </header>
 

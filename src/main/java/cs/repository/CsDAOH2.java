@@ -28,15 +28,17 @@ public class CsDAOH2 implements CsDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
-            while (rs.next()) {
-                CsVO vo = new CsVO();
-                vo.setId(rs.getInt("ID"));
-                vo.setTitle(rs.getString("TITLE"));
-                vo.setUserName(rs.getString("USERNAME"));
-                vo.setCreatedAt(rs.getTimestamp("CREATED_AT"));
+        	while (rs.next()) {
+        	    CsVO vo = new CsVO();
+        	    vo.setId(rs.getInt("ID"));
+        	    vo.setTitle(rs.getString("TITLE"));
+        	    vo.setUserName(rs.getString("WRITER"));
+        	    vo.setCreatedAt(rs.getTimestamp("REGDATE"));
+        	    
+        	    vo.setStatus(rs.getString("STATUS")); 
 
-                list.add(vo);
-            }
+        	    list.add(vo);
+        	}
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -46,7 +48,7 @@ public class CsDAOH2 implements CsDAO {
 
     @Override
     public int save(CsVO cv) {
-        String sql = "INSERT INTO CS (CATEGORY, TITLE, CONTENT, USERNAME) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO CS (CATEGORY, TITLE, CONTENT, WRITER) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -81,8 +83,13 @@ public class CsDAOH2 implements CsDAO {
                     vo.setTitle(rs.getString("TITLE"));
                     vo.setContent(rs.getString("CONTENT"));
                     vo.setCategory(rs.getString("CATEGORY"));
-                    vo.setUserName(rs.getString("USERNAME"));
-                    vo.setCreatedAt(rs.getTimestamp("CREATED_AT"));
+                    vo.setUserName(rs.getString("WRITER"));
+                    vo.setCreatedAt(rs.getTimestamp("REGDATE"));
+                    vo.setStatus(rs.getString("STATUS"));
+                    
+                    vo.setAnswer(rs.getString("ANSWER"));
+                    vo.setAdminId(rs.getString("ADMIN_ID"));
+                    vo.setAnsweredAt(rs.getTimestamp("ANSWERED_AT"));
 
                     return vo;
                 }
@@ -97,7 +104,7 @@ public class CsDAOH2 implements CsDAO {
 
     @Override
     public int update(CsVO cv) {
-        String sql = "UPDATE CS SET TITLE = ?, CONTENT = ?, CATEGORY = ?, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?";
+        String sql = "UPDATE CS SET TITLE = ?, CONTENT = ?, CATEGORY = ?, ANSWER = ?, STATUS = ?, ADMIN_ID = ?, ANSWERED_AT = CURRENT_TIMESTAMP, UPDATED_AT = CURRENT_TIMESTAMP WHERE ID = ?";
 
         try (Connection conn = dataSource.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -105,7 +112,10 @@ public class CsDAOH2 implements CsDAO {
             ps.setString(1, cv.getTitle());
             ps.setString(2, cv.getContent());
             ps.setString(3, cv.getCategory());
-            ps.setInt(4, cv.getId());
+            ps.setString(4, cv.getAnswer());
+            ps.setString(5, cv.getStatus());
+            ps.setString(6, cv.getAdminId());
+            ps.setInt(7, cv.getId());
 
             return ps.executeUpdate();
 
