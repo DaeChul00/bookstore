@@ -19,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -259,29 +260,122 @@ public class OrderController {
 		return "redirect:/order/cart";
 	}
 
-    @PostMapping("/prepare")
+	@PostMapping("/prepare")
     @ResponseBody
-    public Map<String, Object> prepareOrder() {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> prepareOrder(@RequestBody Map<String, Object> payload, HttpSession session) {
         String mid = getSecurityLoginId();
-        List<CartVO> cartList = cartService.getCartList(mid);
-        int total = cartList.stream().mapToInt(c -> c.getPrice() * c.getCount()).sum();
+        
+        int total = 0;
+        String firstTitle = "";
+        int totalItemsSize = 0;
+        
+        List<OrderVO> tempOrders = new ArrayList<>();
+        
+        if (mid != null) {
+            // [회원] DB 장바구니 기준 연산
+            List<CartVO> cartList = cartService.getCartList(mid);
+            if (cartList != null && !cartList.isEmpty()) {
+                total = cartList.stream().mapToInt(c -> c.getPrice() * c.getCount()).sum();
+                firstTitle = cartList.get(0).getTitle();
+                totalItemsSize = cartList.size();
+            }
+        } else {
+            // [비회원] JSP에서 보낸 장바구니 객체 목록을 가공하여 가상 OrderVO 정보 세팅
+            List<Map<String, Object>> cartItems = (List<Map<String, Object>>) payload.get("cartItems");
+            if (cartItems != null && !cartItems.isEmpty()) {
+                for (Map<String, Object> item : cartItems) {
+                    int price = Integer.parseInt(String.valueOf(item.get("price")));
+                    int count = Integer.parseInt(String.valueOf(item.get("count")));
+                    total += (price * count);
+                    
+                    // 비회원 정보 파싱 및 임시 객체 빌드
+                    OrderVO vo = OrderVO.builder()
+                            .bookId(Integer.parseInt(String.valueOf(item.get("bookId"))))
+                            .title(String.valueOf(item.get("title")))
+                            .count(count)
+                            .orderPrice(price * count)
+                            .bookimage(String.valueOf(item.get("bookimage")))
+                            .zipcode(String.valueOf(payload.get("zipcode")))
+                            .roadAddress(String.valueOf(payload.get("roadAddress")))
+                            .build();
+                    tempOrders.add(vo);
+                }
+                firstTitle = String.valueOf(cartItems.get(0).get("title"));
+                totalItemsSize = cartItems.size();
+                
+                // 💡 [핵심 가드] 아직 최종 승인이 안 났으므로, 생성한 임시 비회원 주문 데이터를 
+                // 결제 완료(/success) 시점에 꺼내 쓰도록 세션에 임시 보관해 둡니다.
+                session.setAttribute("tempGuestOrders", tempOrders);
+            }
+        }
         
         String orderCode = "ORDER_" + System.currentTimeMillis();
         
         Map<String, Object> response = new HashMap<>();
         response.put("orderId", orderCode);
         response.put("totalPrice", total);
-        response.put("orderName", cartList.get(0).getTitle() + (cartList.size() > 1 ? " 외 " + (cartList.size()-1) + "건" : ""));
+        response.put("orderName", firstTitle + (totalItemsSize > 1 ? " 외 " + (totalItemsSize - 1) + "건" : ""));
+        
         return response;
     }
 
+    // 2. 토스 결제 최종 성공 콜백 (비회원 데이터 영구 등록 및 세션 주입)
     @RequestMapping("/success")
     public String orderSuccess(@RequestParam String paymentKey, @RequestParam String orderId,
                                @RequestParam(value="zipcode", required=false, defaultValue="") String zipcode,
-                               @RequestParam(value="roadAddress", required=false, defaultValue="") String roadAddress) {
+                               @RequestParam(value="roadAddress", required=false, defaultValue="") String roadAddress,
+                               HttpSession session, HttpServletRequest request, HttpServletResponse response, RedirectAttributes ra) {
+        
         String mid = getSecurityLoginId();
-        // 찬영님의 토스 승인 인프라와 희조님의 주소 데이터 트랜잭션 병합 호출
-        orderService.confirmPayment(orderId, mid, zipcode, roadAddress);
-        return "redirect:/order/list";
+        
+        if (mid != null) {
+            // [회원] 기존 서비스 로직 수행
+            orderService.confirmPayment(orderId, mid, zipcode, roadAddress);
+            return "redirect:/order/list";
+        } else {
+            // ⭕ [비회원] 결제 전 /prepare 단계에서 세션에 박아둔 임시 주문 데이터 획득
+            List<OrderVO> tempOrders = (List<OrderVO>) session.getAttribute("tempGuestOrders");
+            
+            if (tempOrders != null && !tempOrders.isEmpty()) {
+                int lastGeneratedKey = 0;
+                
+                // 장바구니에 담긴 상품 수만큼 ORDERS 테이블에 인서트 수행
+                for (OrderVO orderVO : tempOrders) {
+                    // 주소 파라미터 보정 재확인 주입
+                    orderVO.setZipcode(zipcode);
+                    orderVO.setRoadAddress(roadAddress);
+                    
+                    // 💡 작성해주신 nonlogInsert 호출 -> H2 DB에 등록되고 생성된 AUTO_INCREMENT 'ORDER_ID' 반환됨
+                    lastGeneratedKey = orderService.nonlogInsert(orderVO);
+                }
+                
+                // 💡 [결정적 해결책] 생성된 최종 키를 세션에 저장하여 nmorderlist 조회 쿼리가 읽을 수 있게 바인딩!
+                session.setAttribute("guestOrderId", lastGeneratedKey);
+                
+                // 사용이 끝난 임시 세션 가드는 제거
+                session.removeAttribute("tempGuestOrders");
+                
+                // 🍪 비회원 장바구니 쿠키(guestCart) 완벽 초기화 파괴 조치
+                Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (Cookie cookie : cookies) {
+                        if ("guestCart".equals(cookie.getName())) {
+                            cookie.setValue("");
+                            cookie.setPath("/");
+                            cookie.setMaxAge(0);
+                            response.addCookie(cookie);
+                            break;
+                        }
+                    }
+                }
+                
+                ra.addFlashAttribute("msg", "비회원 주문 및 결제가 완료되었습니다! 💳");
+                return "redirect:/order/nmorderlist";
+            }
+        }
+        
+        return "redirect:/order/cart";
     }
+
 }

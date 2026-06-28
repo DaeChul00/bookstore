@@ -39,9 +39,19 @@ public class MemberDAOH2 implements MemberDAO {
 	
 	@Override
 	public void updateMember(MemberVO vo) {
-		// JdbcTemplate을 사용하여 기존의 복잡했던 PreparedStatement 코드가 아주 간결해집니다.
-		String sql = "UPDATE MEMBER SET NAME = ?, EMAIL = ? WHERE MEMBER_ID = ?";
-		jdbcTemplate.update(sql, vo.getName(), vo.getEmail(), vo.getMemberId());
+		// 1. 회원 기본 정보 수정
+		String memberSql = "UPDATE MEMBER SET NAME = ?, EMAIL = ? WHERE MEMBER_ID = ?";
+		jdbcTemplate.update(memberSql, vo.getName(), vo.getEmail(), vo.getMemberId());
+		
+		// 2. ⭕ [수정] MemberAddressVO 구조에 맞춰 주소 테이블(MEMBER_ADDRESS) Upsert 처리
+		String addressSql = "MERGE INTO MEMBER_ADDRESS (MEMBER_ID, ZIPCODE, ROAD_ADDRESS, ADDR_NAME, IS_DEFAULT) "
+		                  + "KEY(MEMBER_ID) VALUES (?, ?, ?, '기본', 'Y')";
+		
+		jdbcTemplate.update(addressSql, 
+			vo.getMemberId(),   
+			vo.getZipcode(),    // MemberVO에 담겨온 우편번호
+			vo.getRoadAddress() // MemberVO에 담겨온 도로명주소
+		);
 	}
 	
 	@Override

@@ -58,6 +58,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     .requestMatchers(
                             AntPathRequestMatcher.antMatcher("/"),
                             AntPathRequestMatcher.antMatcher("/book/**"),
+                            AntPathRequestMatcher.antMatcher("/order/prepare"),
+                            AntPathRequestMatcher.antMatcher("/order/success"),
+                            AntPathRequestMatcher.antMatcher("/order/fail"),
                             AntPathRequestMatcher.antMatcher("/order/cart"),
                             AntPathRequestMatcher.antMatcher("/order/nmorderlist"),
                             AntPathRequestMatcher.antMatcher("/order/addCart"),

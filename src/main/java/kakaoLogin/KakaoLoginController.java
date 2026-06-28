@@ -46,7 +46,7 @@ public class KakaoLoginController {
 //    private static final String REDIRECT_URI =
 //    	    "https://upriver-grope-equate.ngrok-free.dev/kakao/callback";
     private static final String REDIRECT_URI =
-    		"https://marina-elastic-wilder.ngrok-free.dev/kakao/callback";
+    		"https://localhost:8888/kakao/callback";
     
 
     @GetMapping("/kakao/login")

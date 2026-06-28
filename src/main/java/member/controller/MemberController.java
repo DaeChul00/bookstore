@@ -1,7 +1,9 @@
 package member.controller;
 
 import javax.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -80,10 +82,26 @@ public class MemberController {
     // 4. 회원 정보 수정 처리
     @RequestMapping(value = "/member/update", method = RequestMethod.POST)
     public String update(MemberVO vo, HttpSession session, RedirectAttributes ra) {
+        // 1. DB 주소 테이블 및 회원 테이블 데이터 정상 반영
         memberService.updateMember(vo);
-        ra.addFlashAttribute("msg", "회원 정보가 수정되었습니다. 다시 로그인해 주세요.");
-        session.invalidate();
-        return "redirect:/login";
+        
+        // ⭕ 2. [핵심 조치] 스프링 시큐리티 세션 정보(Authentication) 실시간 강제 갱신
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            // 기존 시큐리티 인증 객체에서 권한 리스트(Authorities)를 유지한 채, 
+            // 방금 주소(ZIPCODE, ROAD_ADDRESS)가 업데이트된 vo 객체 또는 Principal로 세션을 새로 교체합니다.
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                vo, // 세션 Principal에 새 데이터를 밀어 넣음 (또는 auth.getPrincipal() 구조에 맞춰 적용)
+                auth.getCredentials(), 
+                auth.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+        }
+        
+        ra.addFlashAttribute("msg", "회원 정보가 성공적으로 수정되었습니다! ✨");
+        
+        // 3. 내 정보 수정 폼으로 리다이렉트 (이제 세션이 갱신되어 빈칸으로 초기화되지 않고 유지됨)
+        return "redirect:/member/update"; 
     }
 
     // 5. 회원 탈퇴
