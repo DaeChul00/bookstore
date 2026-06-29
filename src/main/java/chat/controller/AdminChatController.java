@@ -7,6 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 import chat.service.ChatService;
 
@@ -18,26 +20,27 @@ public class AdminChatController {
     private ChatService chatService;
 
     @GetMapping("/roomList")
-    public String roomList(Model model, Principal principal) {
+    public String roomList(Model model, Authentication authentication) {
 
-        // 로그인 체크
-        if (principal == null) {
-            return "redirect:/login";
-        }
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
 
-        String loginId = principal.getName();
-
-        // 관리자 권한 체크
-        if (!"admin".equals(loginId)) {
+        if (!isAdmin) {
             return "redirect:/access-denied";
         }
 
-        // 데이터
         model.addAttribute("roomList", chatService.getRoomList());
-
-        // ⭐ 핵심: layout 사용
         model.addAttribute("contentPage", "/WEB-INF/views/admin/roomList.jsp");
 
         return "layout/layout";
+    }
+    
+    @GetMapping("/roomListAjax")
+    public String roomListAjax(Model model){
+
+        model.addAttribute("roomList", chatService.getRoomList());
+
+        return "admin/roomListBody";
     }
 }

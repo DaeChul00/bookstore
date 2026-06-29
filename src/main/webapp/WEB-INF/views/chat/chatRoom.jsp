@@ -1,87 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<div class="chat-wrapper">
-
-    <div class="chat-header">
-    <div>
-        <i class="fa-solid fa-headset"></i>
-        관리자 상담센터
-    </div>
-</div>
-
-    <div id="chatBox">
-        <c:forEach var="msg" items="${messages}">
-            <div class="message ${msg.sender == pageContext.request.userPrincipal.name ? 'mine' : 'other'}">
-                <div class="sender">${msg.sender}</div>
-                <div class="bubble">${msg.message}</div>
-            </div>
-        </c:forEach>
-    </div>
-
-    <div class="chat-input">
-        <input type="text" id="message" placeholder="메시지를 입력하세요">
-        <button type="button" onclick="sendMessage()">전송</button>
-    </div>
-
-</div>
-
-<script>
-let socket = null;
-const roomId = "${roomId}";
-const loginId = "${pageContext.request.userPrincipal.name}";
-
-function connect() {
-
-    socket = new WebSocket(
-        "ws://" + location.host + "${pageContext.request.contextPath}" + "/chat?roomId=" + roomId
-    );
-
-    socket.onmessage = function (e) {
-
-        const data = JSON.parse(e.data);
-        const type = (data.sender === loginId) ? "mine" : "other";
-
-        $("#chatBox").append(
-            "<div class='message " + type + "'>" +
-                "<div class='sender'>" + data.sender + "</div>" +
-                "<div class='bubble'>" + data.message + "</div>" +
-            "</div>"
-        );
-
-        $("#chatBox").scrollTop($("#chatBox")[0].scrollHeight);
-    };
-}
-
-function sendMessage() {
-
-    const msg = $("#message").val();
-    if (!msg.trim()) return;
-
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-
-    socket.send(JSON.stringify({
-        roomId: Number(roomId),
-        sender: loginId,
-        message: msg
-    }));
-
-    $("#message").val("");
-}
-
-$("#message").on("keydown", function (e) {
-    if (e.keyCode === 13) sendMessage();
-});
-
-window.addEventListener("beforeunload", function () {
-    if (socket) socket.close();
-});
-
-connect();
-</script>
-
 <style>
 body{
     background:#f5f7fb;
@@ -226,4 +144,105 @@ body{
 .chat-input button:hover{
     background:#1d4ed8;
 }
+
+.back-btn{
+    background:#fff;
+    color:#1f2937;
+    border:none;
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.back-btn:hover{
+    background:#e5e7eb;
+}
 </style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div class="chat-wrapper">
+
+    <div class="chat-header">
+    <div>
+        <i class="fa-solid fa-headset"></i>
+        관리자 상담센터
+    </div>
+    
+    <button class="back-btn"
+            onclick="location.href='${pageContext.request.contextPath}/admin/roomList'">
+        ← 상담 목록
+    </button>
+</div>
+
+    <div id="chatBox">
+        <c:forEach var="msg" items="${messages}">
+            <div class="message ${msg.sender == pageContext.request.userPrincipal.name ? 'mine' : 'other'}">
+                <div class="sender">${msg.sender}</div>
+                <div class="bubble">${msg.message}</div>
+            </div>
+        </c:forEach>
+    </div>
+
+    <div class="chat-input">
+        <input type="text" id="message" placeholder="메시지를 입력하세요">
+        <button type="button" onclick="sendMessage()">전송</button>
+    </div>
+
+</div>
+
+<script>
+let socket = null;
+const roomId = "${roomId}";
+const loginId = "${pageContext.request.userPrincipal.name}";
+
+function connect() {
+
+    socket = new WebSocket(
+        "ws://" + location.host + "${pageContext.request.contextPath}" + "/chat?roomId=" + roomId
+    );
+
+    socket.onmessage = function (e) {
+
+        const data = JSON.parse(e.data);
+        const type = (data.sender === loginId) ? "mine" : "other";
+
+        $("#chatBox").append(
+            "<div class='message " + type + "'>" +
+                "<div class='sender'>" + data.sender + "</div>" +
+                "<div class='bubble'>" + data.message + "</div>" +
+            "</div>"
+        );
+
+        $("#chatBox").scrollTop($("#chatBox")[0].scrollHeight);
+    };
+}
+
+function sendMessage() {
+
+    const msg = $("#message").val();
+    if (!msg.trim()) return;
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+    socket.send(JSON.stringify({
+        roomId: Number(roomId),
+        sender: loginId,
+        message: msg
+    }));
+
+    $("#message").val("");
+}
+
+$("#message").on("keydown", function (e) {
+    if (e.keyCode === 13) sendMessage();
+});
+
+window.addEventListener("beforeunload", function () {
+    if (socket) socket.close();
+});
+
+connect();
+</script>

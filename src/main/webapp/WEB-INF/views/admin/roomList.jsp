@@ -79,7 +79,29 @@
     }
 </style>
 
-<div class="room-wrapper">
+<script>
+function loadRoomList(){
+
+    $.ajax({
+
+        url:"${pageContext.request.contextPath}/admin/roomListAjax",
+
+        type:"GET",
+
+        success:function(result){
+
+            $("#room-wrapper").html(result);
+
+        }
+
+    });
+
+}
+
+setInterval(loadRoomList,3000);
+</script>
+
+<div id="room-wrapper" class="room-wrapper">
 
     <div class="room-title">💬 1:1 문의 채팅방</div>
 
@@ -87,46 +109,6 @@
         <div class="empty">생성된 채팅방이 없습니다.</div>
     </c:if>
 
-    <c:forEach var="room" items="${roomList}">
-        <div class="room-card">
-
-            <!-- LEFT -->
-            <div class="room-info">
-                <div class="room-users">
-                    👤 ${room.username1} ↔ ${room.username2}
-                </div>
-
-                <div class="room-message">
-                    <c:choose>
-                        <c:when test="${empty room.lastMessage}">
-                            아직 메시지가 없습니다.
-                        </c:when>
-                        <c:otherwise>
-                            ${room.lastMessage}
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-
-                <div class="room-meta">
-                    ROOM #${room.roomId}
-                </div>
-            </div>
-
-            <!-- RIGHT -->
-            <div class="room-right">
-                <div class="room-meta">
-                    <fmt:formatDate value="${room.lastTime}" pattern="yyyy-MM-dd HH:mm"/>
-                </div>
-
-                <br>
-
-                <a class="enter-btn"
-                   href="${pageContext.request.contextPath}/chat/room?roomId=${room.roomId}">
-                    입장
-                </a>
-            </div>
-
-        </div>
-    </c:forEach>
+    <jsp:include page="roomListBody.jsp"/>
 
 </div>

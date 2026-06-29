@@ -25,7 +25,8 @@
 			WHERE room_id = r.room_id
 		 )
 
-		ORDER BY r.created_at DESC
+		<!--ORDER BY r.created_at DESC-->
+		ORDER BY m.send_time DESC
 	</select>
 
 </mapper>
